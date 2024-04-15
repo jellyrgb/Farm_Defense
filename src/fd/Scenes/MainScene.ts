@@ -326,7 +326,7 @@ export default class MainScene extends Scene {
             npc.navkey = "navmesh";
 
             // Give the NPCs their AI
-            npc.addAI(EnemyBehavior, {target: this.battlers[0], range: 100});
+            // npc.addAI(EnemyBehavior, {target: this.battlers[0], range: 100});
 
             // Play the NPCs "IDLE" animation 
             npc.animation.play("IDLE");

@@ -16,7 +16,7 @@ import Battler from "../../../GameSystems/BattleSystem/Battler";
 import MonsterAttack from "../NPCActions/MonsterAttack";
 
 
-export default class GuardBehavior extends NPCBehavior {
+export default class EnemyBehavior extends NPCBehavior {
 
     /** The target the guard should guard */
     protected target: TargetableEntity;
