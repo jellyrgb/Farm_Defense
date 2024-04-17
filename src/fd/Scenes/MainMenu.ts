@@ -8,6 +8,7 @@ import MainScene from "./MainScene";
 import GameEvent from "../../Wolfie2D/Events/GameEvent";
 import Input from "../../Wolfie2D/Input/Input";
 import Button from "../../Wolfie2D/Nodes/UIElements/Button";
+import Rect from "../../Wolfie2D/Nodes/Graphics/Rect"; 
 
 export default class MainMenu extends Scene {
     // Layers, for multiple main menu screens
@@ -58,26 +59,50 @@ export default class MainMenu extends Scene {
         title.position.set(center.x, center.y - 330);
 
 
+        const backgroundStart = new Rect(new Vec2(center.x , center.y - 180), new Vec2(300, 90));
+        backgroundStart.color = new Color(192, 192, 192);
+        backgroundStart.borderWidth = 1;
+        backgroundStart.borderColor = new Color(128, 128, 128);
+        this.mainMenu.addNode(backgroundStart);
+
+
+        //Add start button
         const play = this.add.uiElement(UIElementType.BUTTON, "mainMenu", {position: new Vec2(center.x, center.y - 180), text: "GAME START"});
-        (play as Label).setTextColor(new Color(0, 128, 255));
+        (play as Label).setTextColor(Color.BLACK);
         console.log((play as Label).getFontString())
         play.size.set(300, 100);
         play.borderWidth = 0;
         play.backgroundColor = Color.TRANSPARENT;
         play.onClickEventId = "play";
 
+
         
+
+        const backControl = new Rect(new Vec2(center.x , center.y + 20), new Vec2(300, 90));
+        backControl.color = new Color(192, 192, 192);
+        backControl.borderWidth = 1;
+        backControl.borderColor = new Color(128, 128, 128);
+        this.mainMenu.addNode(backControl);
+
 
         // Add controls button
         const controls = this.add.uiElement(UIElementType.BUTTON, "mainMenu", {position: new Vec2(center.x, center.y + 20), text: "Controls"});
-        (controls as Label).setTextColor(new Color(0, 128, 255));
+        (controls as Label).setTextColor(Color.BLACK);
         controls.size.set(200, 50);
         controls.borderWidth = 0;
         controls.backgroundColor = Color.TRANSPARENT;
         controls.onClickEventId = "control";
 
+
+        // add help background and help button 
+        const backHelp = new Rect(new Vec2(center.x , center.y + 220), new Vec2(300, 90));
+        backHelp.color = new Color(192, 192, 192);
+        backHelp.borderWidth = 1;
+        backHelp.borderColor = new Color(128, 128, 128);
+        this.mainMenu.addNode(backHelp);
+
         const help = this.add.uiElement(UIElementType.BUTTON, "mainMenu", {position: new Vec2(center.x, center.y + 220), text: "HELP"});
-        (help as Label).setTextColor(new Color(0, 128, 255));
+        (help as Label).setTextColor(Color.BLACK);
         help.size.set(200, 50);
         help.borderWidth = 0;
         help.backgroundColor = Color.TRANSPARENT;
@@ -90,26 +115,35 @@ export default class MainMenu extends Scene {
         const controlPhoto = this.add.sprite("backgroundImage", "controls");
         controlPhoto.position.set(center.x, center.y);
 
-        const header = <Label>this.add.uiElement(UIElementType.LABEL, "controls", {position: new Vec2(center.x, center.y - 250), text: "CONTROL"});
-        header.textColor = Color.GREEN;
+        const controlBack = new Rect(new Vec2(center.x , center.y), new Vec2(400, 600));
+        controlBack.borderWidth = 2;
+        controlBack.borderColor = new Color(128, 128, 128);
+        controlBack.color = new Color(192, 192, 192);
+        this.controls.addNode(controlBack);
 
-        const w = <Label>this.add.uiElement(UIElementType.LABEL, "controls", {position: new Vec2(center.x, center.y - 150), text: "W : Move Up"});
+        const header = <Label>this.add.uiElement(UIElementType.LABEL, "controls", {position: new Vec2(center.x, center.y - 250), text: "CONTROL"});
+        header.textColor = new Color(102, 102, 255);
+
+
+
+        const w = <Label>this.add.uiElement(UIElementType.LABEL, "controls", {position: new Vec2(center.x, center.y - 150), text: "W : Move Up  "});
         const s = <Label>this.add.uiElement(UIElementType.LABEL, "controls", {position: new Vec2(center.x, center.y - 100), text: "S : Move Down"});
         const a = <Label>this.add.uiElement(UIElementType.LABEL, "controls", {position: new Vec2(center.x, center.y - 50), text: "A : Move Left"});
-        const d = <Label>this.add.uiElement(UIElementType.LABEL, "controls", {position: new Vec2(center.x, center.y ), text: "D : Move Right"});
-        const q = <Label>this.add.uiElement(UIElementType.LABEL, "controls", {position: new Vec2(center.x, center.y + 50 ), text: "E : Pickup Item"});
+        const d = <Label>this.add.uiElement(UIElementType.LABEL, "controls", {position: new Vec2(center.x, center.y ), text: " D : Move Right"});
+        const q = <Label>this.add.uiElement(UIElementType.LABEL, "controls", {position: new Vec2(center.x, center.y + 50 ), text: "  E : Pickup Item"});
         const e = <Label>this.add.uiElement(UIElementType.LABEL, "controls", {position: new Vec2(center.x, center.y + 100), text: "Q : Drop Item"});
-        const sh = <Label>this.add.uiElement(UIElementType.LABEL, "controls", {position: new Vec2(center.x, center.y + 150), text: "Shift : Move Fast"});
-        w.textColor = (new Color(0, 128, 255));
-        s.textColor = (new Color(0, 128, 255));
-        a.textColor = (new Color(0, 128, 255));
-        d.textColor = (new Color(0, 128, 255));
-        q.textColor = (new Color(0, 128, 255));
-        e.textColor = (new Color(0, 128, 255));
-        sh.textColor = (new Color(0, 128, 255));
+        const sh = <Label>this.add.uiElement(UIElementType.LABEL, "controls", {position: new Vec2(center.x, center.y + 150), text: "Shift : Run  "});
+        w.textColor = new Color(102, 102, 255);
+        s.textColor = new Color(102, 102, 255);
+        a.textColor = new Color(102, 102, 255);
+        d.textColor = new Color(102, 102, 255);
+        q.textColor = new Color(102, 102, 255);
+        e.textColor = new Color(102, 102, 255);
+        sh.textColor = new Color(102, 102, 255);
 
 
         const back = this.add.uiElement(UIElementType.BUTTON, "controls", {position: new Vec2(center.x, center.y + 250), text: "Back"});
+        (back as Label).setTextColor(Color.BLACK);
         back.size.set(200, 100);
         back.backgroundColor = Color.TRANSPARENT;
         back.onClickEventId = "menu";
@@ -123,60 +157,82 @@ export default class MainMenu extends Scene {
         const helpPhoto = this.add.sprite("backgroundImage", "help");
         helpPhoto.position.set(center.x, center.y);
 
-        const helpHeader = <Label>this.add.uiElement(UIElementType.LABEL, "help", {position: new Vec2(center.x, center.y - 470), text: "Story"});
-        helpHeader.textColor = Color.GREEN;
+
+        const storyRect = new Rect(new Vec2(center.x , center.y - 280), new Vec2(1000, 410));
+        storyRect.borderWidth = 2;
+        storyRect.borderColor = new Color(128, 128, 128);
+        storyRect.color = new Color(192, 192, 192);
+        this.help.addNode(storyRect);
+
+        const helpHeader = <Label>this.add.uiElement(UIElementType.LABEL, "help", {position: new Vec2(center.x, center.y - 450), text: "Story"});
+        helpHeader.textColor = new Color(102, 102, 255);
 
         const text1 = "One day, strange things began happening around a peaceful village,";
-        const text2 = "accompanied by unusual sounds from the forest behind it. New, ";
-        const text3 = "unidentified types of insects ravaging crops and damaging farms.";
+        const text2 = "accompanied by unusual sounds from the forest behind it. New,     ";
+        const text3 = "unidentified types of insects ravaging crops and damaging farms.  ";
         const text4 = "These insects seemed to possess mysterious energy, becoming larger";
-        const text5 = "and more menacing under the moonlight. Kevin decided to transform";
-        const text6 = "the harvested crops into defense towers to protect the village.";
-        const text7 = "Will Kevin be able to protect his farm and village ?";
+        const text5 = "and more menacing under the moonlight. Kevin decided to transform ";
+        const text6 = "the harvested crops into defense towers to protect the village.   ";
+        const text7 = "Will Kevin be able to protect his farm and village ?              ";
 
-        const line1 = <Label>this.add.uiElement(UIElementType.LABEL, "help", {position: new Vec2(center.x, center.y - 420), text: text1});
-        const line2 = <Label>this.add.uiElement(UIElementType.LABEL, "help", {position: new Vec2(center.x, center.y - 370), text: text2});
-        const line3 = <Label>this.add.uiElement(UIElementType.LABEL, "help", {position: new Vec2(center.x, center.y - 320), text: text3});
-        const line4 = <Label>this.add.uiElement(UIElementType.LABEL, "help", {position: new Vec2(center.x, center.y - 270), text: text4});
-        const line5 = <Label>this.add.uiElement(UIElementType.LABEL, "help", {position: new Vec2(center.x, center.y - 220), text: text5});
-        const line6 = <Label>this.add.uiElement(UIElementType.LABEL, "help", {position: new Vec2(center.x, center.y - 170), text: text6});
-        const line7 = <Label>this.add.uiElement(UIElementType.LABEL, "help", {position: new Vec2(center.x, center.y - 120), text: text7});
+        const line1 = <Label>this.add.uiElement(UIElementType.LABEL, "help", {position: new Vec2(center.x, center.y - 400), text: text1});
+        const line2 = <Label>this.add.uiElement(UIElementType.LABEL, "help", {position: new Vec2(center.x, center.y - 350), text: text2});
+        const line3 = <Label>this.add.uiElement(UIElementType.LABEL, "help", {position: new Vec2(center.x, center.y - 300), text: text3});
+        const line4 = <Label>this.add.uiElement(UIElementType.LABEL, "help", {position: new Vec2(center.x, center.y - 250), text: text4});
+        const line5 = <Label>this.add.uiElement(UIElementType.LABEL, "help", {position: new Vec2(center.x, center.y - 200), text: text5});
+        const line6 = <Label>this.add.uiElement(UIElementType.LABEL, "help", {position: new Vec2(center.x, center.y - 150), text: text6});
+        const line7 = <Label>this.add.uiElement(UIElementType.LABEL, "help", {position: new Vec2(center.x, center.y - 100), text: text7});
 
-        line1.textColor = (new Color(0, 128, 255));; line1.fontSize=22;line2.textColor = (new Color(0, 128, 255));; line2.fontSize=22;
-        line3.textColor = (new Color(0, 128, 255));; line3.fontSize=22;line4.textColor = (new Color(0, 128, 255));; line4.fontSize=22;
-        line5.textColor = (new Color(0, 128, 255));; line5.fontSize=22;line6.textColor = (new Color(0, 128, 255));; line6.fontSize=22;
-        line7.textColor = (new Color(0, 128, 255));; line7.fontSize=22;
+        line1.textColor = Color.BLACK; line1.fontSize=22;line2.textColor = Color.BLACK; line2.fontSize=22;
+        line3.textColor = Color.BLACK; line3.fontSize=22;line4.textColor = Color.BLACK; line4.fontSize=22;
+        line5.textColor = Color.BLACK; line5.fontSize=22;line6.textColor = Color.BLACK; line6.fontSize=22;
+        line7.textColor = Color.BLACK; line7.fontSize=22;
 
 
-        const DevelopmentTeam = <Label>this.add.uiElement(UIElementType.LABEL, "help", {position: new Vec2(center.x, center.y - 30), text: "Development Team"});
-        DevelopmentTeam.textColor = Color.GREEN;
+        const teamRect = new Rect(new Vec2(center.x , center.y + 5), new Vec2(1000, 130));
+        teamRect.borderWidth = 2;
+        teamRect.borderColor = new Color(128, 128, 128);
+        teamRect.color = new Color(192, 192, 192);
+        this.help.addNode(teamRect);
+
+
+        const DevelopmentTeam = <Label>this.add.uiElement(UIElementType.LABEL, "help", {position: new Vec2(center.x, center.y - 25), text: "Development Team"});
+        DevelopmentTeam.textColor = new Color(102, 102, 255);
 
         const name1 = "Developed by Taeyoung Kim, Hyomin Kim, Minwoo Son"
         const nameline1 = <Label>this.add.uiElement(UIElementType.LABEL, "help", {position: new Vec2(center.x, center.y + 30), text: name1});
-        nameline1.textColor = (new Color(0, 128, 255));nameline1.fontSize = 24;
+        nameline1.textColor = Color.BLACK;  nameline1.fontSize = 24;
 
 
-        const Cheat = <Label>this.add.uiElement(UIElementType.LABEL, "help", {position: new Vec2(center.x, center.y + 90), text: "Cheat Code"});
-        Cheat.textColor = Color.GREEN;
+
+        const cheatRect = new Rect(new Vec2(center.x , center.y + 200 ), new Vec2(1000, 240));
+        cheatRect.borderWidth = 2;
+        cheatRect.borderColor = new Color(128, 128, 128);
+        cheatRect.color = new Color(192, 192, 192);
+        this.help.addNode(cheatRect);
+
+        const Cheat = <Label>this.add.uiElement(UIElementType.LABEL, "help", {position: new Vec2(center.x, center.y + 110), text: "Cheat Code"});
+        Cheat.textColor = new Color(102, 102, 255);
 
         const cheat1 = "SHOWMETHEMONEY : Money Max"
         const cheat2 = "ATTACK : Damage Max"
         const cheat3 = "IMNOTHURT : Defense Max"
         const cheat4 = "UNlOCK : Unlock all levels"
 
-        const cheatname1 = <Label>this.add.uiElement(UIElementType.LABEL, "help", {position: new Vec2(center.x, center.y + 140), text: cheat1});
-        const cheatname2 = <Label>this.add.uiElement(UIElementType.LABEL, "help", {position: new Vec2(center.x, center.y + 180), text: cheat2});
-        const cheatname3 = <Label>this.add.uiElement(UIElementType.LABEL, "help", {position: new Vec2(center.x, center.y + 220), text: cheat3});
-        const cheatname4 = <Label>this.add.uiElement(UIElementType.LABEL, "help", {position: new Vec2(center.x, center.y + 260), text: cheat4});
-        cheatname1.textColor = (new Color(0, 128, 255)); cheatname1.fontSize = 24;
-        cheatname2.textColor = (new Color(0, 128, 255)); cheatname2.fontSize = 24;
-        cheatname3.textColor = (new Color(0, 128, 255)); cheatname3.fontSize = 24;
-        cheatname4.textColor = (new Color(0, 128, 255)); cheatname4.fontSize = 24;
+        const cheatname1 = <Label>this.add.uiElement(UIElementType.LABEL, "help", {position: new Vec2(center.x, center.y + 160), text: cheat1});
+        const cheatname2 = <Label>this.add.uiElement(UIElementType.LABEL, "help", {position: new Vec2(center.x, center.y + 200), text: cheat2});
+        const cheatname3 = <Label>this.add.uiElement(UIElementType.LABEL, "help", {position: new Vec2(center.x, center.y + 240), text: cheat3});
+        const cheatname4 = <Label>this.add.uiElement(UIElementType.LABEL, "help", {position: new Vec2(center.x, center.y + 280), text: cheat4});
+        cheatname1.textColor = Color.BLACK; cheatname1.fontSize = 24;
+        cheatname2.textColor = Color.BLACK; cheatname2.fontSize = 24;
+        cheatname3.textColor = Color.BLACK;  cheatname3.fontSize = 24;
+        cheatname4.textColor = Color.BLACK;  cheatname4.fontSize = 24;
 
         
 
 
         const helpBack = this.add.uiElement(UIElementType.BUTTON, "help", {position: new Vec2(center.x, center.y + 420), text: "Back"});
+        (helpBack as Label).setTextColor(Color.BLACK);
         helpBack.size.set(200, 100);
         helpBack.backgroundColor = Color.TRANSPARENT;
         helpBack.onClickEventId = "menu";

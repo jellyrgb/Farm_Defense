@@ -26,7 +26,7 @@ import HealthbarHUD from "../GameSystems/HUD/HealthbarHUD";
 import InventoryHUD from "../GameSystems/HUD/InventoryHUD";
 import Inventory from "../GameSystems/ItemSystem/Inventory";
 import Item from "../GameSystems/ItemSystem/Item";
-import Seed from "../GameSystems/ItemSystem/Items/seed";
+import Seed from "../GameSystems/ItemSystem/Items/Seed";
 import { ClosestPositioned } from "../GameSystems/Searching/Reducers";
 import BasicTargetable from "../GameSystems/Targeting/BasicTargetable";
 import Position from "../GameSystems/Targeting/Position";
@@ -38,16 +38,16 @@ import Input from "../../Wolfie2D/Input/Input";
 import MainMenu from "./MainMenu";
 
 const BattlerGroups = {
-    RED: 1,
-    BLUE: 2
+    TURRET: 1,
+    ENEMY: 2
 } as const;
 
 export default class MainScene extends Scene {
 
-    /** GameSystems in the HW4 Scene */
+    /** GameSystems in the Scene */
     private inventoryHud: InventoryHUD;
 
-    /** All the battlers in the HW4Scene (including the player) */
+    /** All the battlers in the Scene (including the player) */
     private battlers: (Battler & Actor)[];
     /** Healthbars for the battlers */
     private healthbars: Map<number, HealthbarHUD>;
@@ -64,7 +64,8 @@ export default class MainScene extends Scene {
     
     // pause menu layer
     private pauseMenu: Layer;
-    
+
+    private floors: OrthogonalTilemap;
 
     public constructor(viewport: Viewport, sceneManager: SceneManager, renderingManager: RenderingManager, options: Record<string, any>) {
         super(viewport, sceneManager, renderingManager, options);
@@ -82,13 +83,14 @@ export default class MainScene extends Scene {
         // Load the player and enemy spritesheets
         this.load.spritesheet("player", "fd_assets/spritesheets/kevin.json");
 
-        // Load in the enemy sprites
+        // Load in the enemy and turret sprites
         this.load.spritesheet("monsterA", "fd_assets/spritesheets/monsterA.json");
         this.load.spritesheet("monsterB", "fd_assets/spritesheets/monsterB.json");
         this.load.spritesheet("monsterC", "fd_assets/spritesheets/monsterC.json");
+        this.load.spritesheet("turretA", "fd_assets/spritesheets/turretA.json");
 
         // Load the tilemap
-        this.load.tilemap("level", "fd_assets/tilemaps/level1.json");
+        this.load.tilemap("level1", "fd_assets/tilemaps/level1.json");
 
         // Load the enemy locations
         this.load.object("enemy_location", "fd_assets/data/enemies/enemy_location.json");
@@ -100,6 +102,7 @@ export default class MainScene extends Scene {
         this.load.image("seed", "fd_assets/sprites/seed.png");
         this.load.image("inventorySlot", "fd_assets/sprites/inventory.png");
         this.load.image("tomato_sprite", "fd_assets/sprites/tomato_sprite.png");
+
     }
     /**
      * @see Scene.startScene
@@ -125,10 +128,11 @@ export default class MainScene extends Scene {
         this.receiver.subscribe("backToMainMenu");
 
         // Add in the tilemap
-        let tilemapLayers = this.add.tilemap("level");
+        let tilemapLayers = this.add.tilemap("level1");
 
         // Get the wall layer
         this.walls = <OrthogonalTilemap>tilemapLayers[1].getItems()[0];
+        this.floors = <OrthogonalTilemap>tilemapLayers[0].getItems()[0];
 
         // Set the viewport bounds to the tilemap
         let tilemapSize: Vec2 = this.walls.size;
@@ -169,6 +173,36 @@ export default class MainScene extends Scene {
         while (this.receiver.hasNextEvent()) {
             this.handleEvent(this.receiver.getNextEvent());
         }
+
+        // prevent player escape from map
+        let player = this.battlers.find(b => b instanceof PlayerActor) as PlayerActor;
+        let currentPosition = player.position.clone();
+    
+        // boundary
+        const maxX = 512;
+        const maxY = 960;
+    
+        let adjusted = false;
+        if (currentPosition.x < 0) {
+            currentPosition.x = 0;
+            adjusted = true;
+        } else if (currentPosition.x > maxX) {
+            currentPosition.x = maxX;
+            adjusted = true;
+        }
+        if (currentPosition.y < 0) {
+            currentPosition.y = 0;
+            adjusted = true;
+        } else if (currentPosition.y > maxY) {
+            currentPosition.y = maxY;
+            adjusted = true;
+        }
+
+        if (adjusted) {
+            console.log("위치 조정됨")
+            player.position = currentPosition;
+        }
+
         if (Input.isKeyJustPressed("escape")) {       
             this.togglePauseMenu();
         }
@@ -193,19 +227,23 @@ export default class MainScene extends Scene {
      */
     public handleEvent(event: GameEvent): void {
         switch (event.type) {
-            case BattlerEvent.BATTLER_KILLED: {
-                this.handleBattlerKilled(event);
-                break;
-            }
             case "resumeGame":
                 this.togglePauseMenu(); // resume the game
                 break;
             case "backToMainMenu":
                 this.sceneManager.changeToScene(MainMenu); // go to main menu
                 break;
+
+            // Battle Events
+            case BattlerEvent.BATTLER_KILLED: {
+                this.handleBattlerKilled(event);
+                break;
+            }
             case BattlerEvent.BATTLER_RESPAWN: {
                 break;
             }
+        
+            // Item Events
             case ItemEvent.ITEM_REQUEST: {
                 this.handleItemRequest(event.data.get("node"), event.data.get("inventory"));
                 break;
@@ -214,17 +252,78 @@ export default class MainScene extends Scene {
                 let item = event.data.get("item");
                 // Change the sprite to tomato
                 item.changeSprite("tomato_sprite");
+
+                // Change the item into Turret object, and add it to the battlers
+                let turret = this.add.animatedSprite(NPCActor, "turretA", "primary");
+                // Play GROW_UP animation of the turret
+                /**
+                 * @todo 애니메이션 길이 수정
+                 */
+                turret.animation.play("GROW_UP", false);
+
+                turret.position.set(item.position.x, item.position.y);
+                turret.addPhysics(new AABB(Vec2.ZERO, new Vec2(7, 7)), null, false);
+                turret.battleGroup = 1;
+                turret.health = 10;
+                turret.maxHealth = 10;
+                turret.navkey = "navmesh";
+                // turret.addAI(TurretBehavior, {target: this.battlers[0], range: 100});
+                turret.animation.play("IDLE");
+                this.battlers.push(turret);
+
+                // Make the seed invisible
+                item.visible = false;
+
                 break;
             }
             case ItemEvent.ITEM_PICKED_UP: {
+                // If the seed that was set invisible under the turret object is picked up, 
+                // revert the turret to seed, set visible, and put it back to the inventory
+                let item = event.data.get("item");
+                let inventory = event.data.get("inventory");
+                let node = event.data.get("node");
+
+                // Make the item visible
+                item.visible = true;
+                // Put the item back to the inventory
+                inventory.add(item);
+
+                // Remove the turret from the battlers
+                let turret = this.battlers.find(b => b.position.distanceTo(item.position) === 0);
+                this.battlers = this.battlers.filter(b => b !== turret);
                 
+                /**
+                 * @todo 터렛 화면에서 삭제
+                 */
+                
+                break;
             }
             case ItemEvent.ITEM_DROPPED: {
+                // If the item is dropped on tile number 12, it will grow up
+                let item = event.data.get("item");
                 
+                // Get the col and row of the tile that the item is dropped
+                let col = item.position.x;
+                let row = item.position.y;
+                let tile = this.floors.getTilemapPosition(col, row);
+                console.log(tile);
+
+                // 위쪽 밭
+                if (tile.y >= 2 && tile.y <= 11) {
+                    // If tile.x is not 0, 1, 5, 6, 10, 11, 15, 16, 20, 21, 25, 26, 30, 31
+                    if (tile.x % 5 !== 0 && tile.x % 5 !== 1) {
+                        // Emit an event to make the item grow up
+                        this.emitter.fireEvent(ItemEvent.ITEM_GROW_UP, {item: item});
+                    }
+                }
+
+                // 아래쪽 밭
+                break;
             }
             case ItemEvent.ITEM_USED: {
-                
+                break;
             }
+
             default: {
                 throw new Error(`Unhandled event type "${event.type}" caught in HW4Scene event handler`);
             }
@@ -234,7 +333,8 @@ export default class MainScene extends Scene {
 
     protected handleItemRequest(node: GameNode, inventory: Inventory): void {
         let items: Item[] = new Array<Item>(...this.seeds).filter((item: Item) => {
-            return item.inventory === null && item.position.distanceTo(node.position) <= 100;
+            // 주울 때 범위 한 칸
+            return item.inventory === null && item.position.distanceTo(node.position) <= 20;
         });
 
         if (items.length > 0) {
@@ -326,7 +426,7 @@ export default class MainScene extends Scene {
             npc.navkey = "navmesh";
 
             // Give the NPCs their AI
-            npc.addAI(EnemyBehavior, {target: this.battlers[0], range: 100});
+            //npc.addAI(EnemyBehavior, {target: this.battlers[0], range: 100});
 
             // Play the NPCs "IDLE" animation 
             npc.animation.play("IDLE");
@@ -348,13 +448,8 @@ export default class MainScene extends Scene {
             this.seeds[i].position.set(seeds.items[i][0], seeds.items[i][1]);
         }
     }
-    /**
-     * Initializes the navmesh graph used by the NPCs in the HW4Scene. This method is a little buggy, and
-     * and it skips over some of the positions on the tilemap. If you can fix my navmesh generation algorithm,
-     * go for it.
-     * 
-     * - Peter
-     */
+
+
     protected initializeNavmesh(): void {
         // Create the graph
         this.graph = new PositionGraph();

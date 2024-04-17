@@ -1,7 +1,7 @@
 import Unique from "../../../Wolfie2D/DataTypes/Interfaces/Unique";
 import Emitter from "../../../Wolfie2D/Events/Emitter";
 import Item from "./Item";
-import Healthpack from "./Items/seed";
+import Seed from "./Items/Seed";
 
 /**
  * An inventory is a collection of items. All items in the inventory must be registered with

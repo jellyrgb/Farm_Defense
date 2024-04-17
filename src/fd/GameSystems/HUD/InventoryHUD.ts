@@ -72,21 +72,23 @@ export default class InventoryHUD implements Updateable {
         this.itemSlots = new Array<Sprite>();
         for (let i = 0; i < this.size; i += 1) {
             this.itemSlots[i] = this.scene.add.sprite(this.slotSprite, this.slotLayer);
-            this.itemSlots[i].scale.div(scalar);
+            this.itemSlots[i].scale = this.itemSlots[i].scale.mult(new Vec2(1, 1));
         }
+
         // Set the positions of the item slot sprites
-        let width = this.itemSlots[0].size.x;
-        let height = this.itemSlots[0].size.y;
+        let width = this.itemSlots[0].size.x ;
+        let height = this.itemSlots[0].size.y * this.itemSlots[0].scale.y;
         for (let i = 0; i < this.size; i += 1) {
-            this.itemSlots[i].position.set(this.start.x + i*(width + this.padding), this.start.y).div(scalar);
+            this.itemSlots[i].position.set(this.start.x - 205 + i*(width + this.padding * 3), this.start.y).div(scalar);
         }
+        
         // Set the slot numbers in the user interface
         this.itemSlotNums = new Array<Label>();
         for (let i = 0; i < this.size; i += 1) {
-            this.itemSlotNums[i] = <Label>this.scene.add.uiElement(UIElementType.LABEL, this.slotLayer, {position: new Vec2(this.start.x + i*(width + this.padding), this.start.y + height/2 + 8).div(scalar), text: `${i + 1}`});
-            this.itemSlotNums[i].fontSize = 12;
-            this.itemSlotNums[i].font = "Courier";
-            this.itemSlotNums[i].textColor = Color.WHITE;
+            this.itemSlotNums[i] = <Label>this.scene.add.uiElement(UIElementType.LABEL, this.slotLayer, {position: new Vec2(this.start.x - 205 + i*(width + this.padding * 3), this.start.y + height/2 + 8).div(scalar), text: `${i + 1}`});
+            this.itemSlotNums[i].fontSize = 13;
+            this.itemSlotNums[i].font = "pixel";
+            this.itemSlotNums[i].textColor = Color.BLACK;
         }
     }
 

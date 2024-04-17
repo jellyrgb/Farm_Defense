@@ -1,7 +1,7 @@
 import Vec2 from "../../Wolfie2D/DataTypes/Vec2";
 import Scene from "../../Wolfie2D/Scene/Scene";
 import OrthogonalTilemap from "../../Wolfie2D/Nodes/Tilemaps/OrthogonalTilemap";
-import Seed from "../GameSystems/ItemSystem/Items/seed";
+import Seed from "../GameSystems/ItemSystem/Items/Seed";
 import Battler from "../GameSystems/BattleSystem/Battler";
 
 

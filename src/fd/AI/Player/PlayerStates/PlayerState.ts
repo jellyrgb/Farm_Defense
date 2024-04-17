@@ -62,7 +62,7 @@ export default abstract class PlayerState extends State {
                 this.owner.inventory.remove(item.id);
 
                 // Emit an event to make the item grow up
-                this.emitter.fireEvent(ItemEvent.ITEM_GROW_UP, {item: item});
+                this.emitter.fireEvent(ItemEvent.ITEM_DROPPED, {item: item});
             }
         }
 

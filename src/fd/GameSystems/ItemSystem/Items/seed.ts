@@ -1,19 +1,19 @@
 import Vec2 from "../../../../Wolfie2D/DataTypes/Vec2";
 import Sprite from "../../../../Wolfie2D/Nodes/Sprites/Sprite";
-import HW4Scene from "../../../Scenes/Scene";
+import Scene from "../../../Scenes/Scene";
 import Item from "../Item";
 
-export default class Healthpack extends Item {
+export default class Seed extends Item {
     
-    protected hp: number;
+    protected st: number;
 
     public constructor(sprite: Sprite) {
         super(sprite);
-        this.hp = 5;
+        // Choose it's star value randomly from 1-3
+        this.st = Math.floor(Math.random() * 3) + 1;
     }
 
-    public get health(): number { return this.hp; }
-    public set health(hp: number) { this.hp = hp; }
-
+    public get star(): number { return this.st; }
+    public set star(st: number) { this.st = st; }
 
 }
