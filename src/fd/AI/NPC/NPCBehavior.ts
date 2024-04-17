@@ -37,7 +37,7 @@ export default abstract class NPCBehavior extends StateMachineGoapAI<NPCAction> 
         switch(event.type) {
             case BattlerEvent.BATTLER_ATTACKED: {
                 console.log("Catching and handling battler attacking event");
-                this.handleLasergunFired(event.data.get("actorId"), event.data.get("to"), event.data.get("from"));
+                this.handleBattlerAttacked(event.data.get("attacker"), event.data.get("target"), event.data.get("damage"));
                 break;
             }
             default: {
@@ -47,9 +47,9 @@ export default abstract class NPCBehavior extends StateMachineGoapAI<NPCAction> 
         }
     }
 
-    protected handleLasergunFired(actorId: number, to: Vec2, from: Vec2): void {
-        if (actorId !== this.owner.id) {
-            this.owner.health -= this.owner.collisionShape.getBoundingRect().intersectSegment(to, from) ? 1 : 0;
+    protected handleBattlerAttacked(attacker: NPCActor, target: NPCActor, damage: number): void {
+        if (attacker !== this.owner) {
+            this.owner.health -= damage;
         }
     }
     

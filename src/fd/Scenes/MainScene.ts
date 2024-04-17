@@ -36,6 +36,8 @@ import Layer from "../../Wolfie2D/Scene/Layer";
 import { UIElementType } from "../../Wolfie2D/Nodes/UIElements/UIElementTypes";
 import Input from "../../Wolfie2D/Input/Input";
 import MainMenu from "./MainMenu";
+import Label from "../../Wolfie2D/Nodes/UIElements/Label";
+import Rect from "../../Wolfie2D/Nodes/Graphics/Rect";
 
 const BattlerGroups = {
     TURRET: 1,
@@ -64,6 +66,8 @@ export default class MainScene extends Scene {
     
     // pause menu layer
     private pauseMenu: Layer;
+
+    private pausedLabel: Label;
 
     private floors: OrthogonalTilemap;
 
@@ -94,6 +98,7 @@ export default class MainScene extends Scene {
 
         // Load the enemy locations
         this.load.object("enemy_location", "fd_assets/data/enemies/enemy_location.json");
+        this.load.object("test_location", "fd_assets/data/enemies/test_location.json")
 
         // Load the seed locations
         this.load.object("seeds", "fd_assets/data/items/seeds.json");
@@ -146,7 +151,7 @@ export default class MainScene extends Scene {
         this.initializePlayer();
         this.initializeItems();
 
-        //this.initializeNavmesh();
+        this.initializeNavmesh();
 
         // Create the NPCS
         this.initializeNPCs();
@@ -199,7 +204,6 @@ export default class MainScene extends Scene {
         }
 
         if (adjusted) {
-            console.log("위치 조정됨")
             player.position = currentPosition;
         }
 
@@ -211,15 +215,47 @@ export default class MainScene extends Scene {
     }
 
     private togglePauseMenu(): void {
-        const isHidden = this.getLayer("pauseMenu").isHidden();
-        this.getLayer("pauseMenu").setHidden(!isHidden);
+        const pauseMenuLayer = this.getLayer("pauseMenu");
+        const isHidden = pauseMenuLayer.isHidden();
+        pauseMenuLayer.setHidden(!isHidden);
     
+        const center = new Vec2(200, 200);
+        
         if (!isHidden) {
-            this.getLayer("pauseMenu").setPaused(true);
+            if (this.pausedLabel) {
+                this.pausedLabel.destroy();
+                this.pausedLabel = null;
+            }
         } else {
-            this.getLayer("pauseMenu").setPaused(false);
+                const menuBackground = new Rect(new Vec2(center.x - 25, center.y - 25), new Vec2(300, 300));
+                menuBackground.color = new Color(0, 0, 0, 0.9);
+                menuBackground.borderColor = new Color(255, 255, 255);
+                menuBackground.borderWidth = 2;
+                pauseMenuLayer.addNode(menuBackground);
+        
+                // Create buttons
+                const resumeButton = this.add.uiElement(UIElementType.BUTTON, "pauseMenu", {
+                    position: new Vec2(center.x - 25, center.y - 95),
+                    text: "Resume"
+                });
+                resumeButton.size.set(300, 100);
+                resumeButton.onClickEventId = "resumeGame";
+        
+                const controlsButton = this.add.uiElement(UIElementType.BUTTON, "pauseMenu", {
+                    position: new Vec2(center.x - 25, center.y - 25),
+                    text: "Controls"
+                });
+                controlsButton.size.set(300, 100);
+                controlsButton.onClickEventId = "showControls";
+        
+                const mainMenuButton = this.add.uiElement(UIElementType.BUTTON, "pauseMenu", {
+                    position: new Vec2(center.x - 25, center.y + 50),
+                    text: "Main Menu"
+                });
+                mainMenuButton.size.set(300, 100);
+                mainMenuButton.onClickEventId = "backToMainMenu";
+            }
         }
-    }
 
     /**
      * Handle events from the rest of the game
@@ -227,12 +263,17 @@ export default class MainScene extends Scene {
      */
     public handleEvent(event: GameEvent): void {
         switch (event.type) {
-            case "resumeGame":
+            case "resumeGame": {
+                console.log("재시작");
                 this.togglePauseMenu(); // resume the game
                 break;
-            case "backToMainMenu":
+            }
+            case "backToMainMenu": {
+                console.log("메인메뉴로");
+                this.viewport.setZoomLevel(1);
                 this.sceneManager.changeToScene(MainMenu); // go to main menu
                 break;
+            }
 
             // Battle Events
             case BattlerEvent.BATTLER_KILLED: {
@@ -255,7 +296,6 @@ export default class MainScene extends Scene {
 
                 // Change the item into Turret object, and add it to the battlers
                 let turret = this.add.animatedSprite(NPCActor, "turretA", "primary");
-                // Play GROW_UP animation of the turret
                 /**
                  * @todo 애니메이션 길이 수정
                  */
@@ -372,7 +412,7 @@ export default class MainScene extends Scene {
     protected initializePlayer(): void {
         let player = this.add.animatedSprite(PlayerActor, "player", "primary");
         player.position.set(200, 200);
-        player.battleGroup = 2;
+        player.battleGroup = 1;
 
         player.health = 10;
         player.maxHealth = 10;
@@ -406,6 +446,32 @@ export default class MainScene extends Scene {
      */
     protected initializeNPCs(): void {
 
+        let test = this.load.getObject("test_location");
+
+        // Initialize the test enemies
+        for (let i = 0; i < test.enemies.length; i++) {
+            let npc = this.add.animatedSprite(NPCActor, "monsterC", "primary");
+            npc.position.set(test.enemies[i][0], test.enemies[i][1]);
+            npc.addPhysics(new AABB(Vec2.ZERO, new Vec2(7, 7)), null, false);
+
+            // Give the NPCS their healthbars
+            let healthbar = new HealthbarHUD(this, npc, "primary", {size: npc.size.clone().scaled(2, 1/2), offset: npc.size.clone().scaled(0, -1/2)});
+            this.healthbars.set(npc.id, healthbar);
+
+            npc.battleGroup = 1
+            npc.speed = 10;
+            npc.health = 10;
+            npc.maxHealth = 10;
+            npc.navkey = "navmesh";
+
+            // Give the NPCs their AI
+            //
+            
+            npc.animation.play("IDLE");
+
+            this.battlers.push(npc);
+        }
+
         // Get the object data for the blue enemies
         let enemy = this.load.getObject("enemy_location");
 
@@ -425,8 +491,10 @@ export default class MainScene extends Scene {
             npc.maxHealth = 10;
             npc.navkey = "navmesh";
 
+            console.log(this.battlers[1]);
+
             // Give the NPCs their AI
-            //npc.addAI(EnemyBehavior, {target: this.battlers[0], range: 100});
+            // npc.addAI(EnemyBehavior, {target: this.battlers[1], range: 1000});
 
             // Play the NPCs "IDLE" animation 
             npc.animation.play("IDLE");

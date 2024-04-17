@@ -16,6 +16,7 @@ export default class MainMenu extends Scene {
     private mainMenu: Layer;
     private controls: Layer;
     private help: Layer;
+    private level : Layer;
 
 
     public loadScene(){
@@ -108,6 +109,44 @@ export default class MainMenu extends Scene {
         help.backgroundColor = Color.TRANSPARENT;
         help.onClickEventId = "help";
 
+
+        // Level selection screen
+
+        this.level = this.addUILayer("levelSelect");
+        this.level.setHidden(true);
+
+
+        const levelPhoto = this.add.sprite("backgroundImage", "levelSelect");
+        levelPhoto.position.set(center.x, center.y);
+        const numCols = 3;
+
+        
+
+        const levels = ["Level 1", "Level 2", "Level 3", "Level 4", "Level 5", "Level 6"];
+        levels.forEach((lev, index) => {
+            const row = Math.floor(index / numCols);
+            const col = index % numCols;
+
+            const xPosition = center.x - 300 + col * 300;
+            const yPosition = center.y - 150 + row * 300; 
+        
+            const levelRect = new Rect(new Vec2(xPosition, yPosition), new Vec2(250, 200));
+            levelRect.color = new Color(153, 153, 255, 0.9);
+            levelRect.borderWidth = 1;
+            levelRect.borderColor = new Color(128, 128, 128);
+            this.level.addNode(levelRect);
+        
+            const levelButton = this.add.uiElement(UIElementType.BUTTON, "levelSelect", {
+                position: new Vec2(xPosition, yPosition),
+                text: lev            
+            });
+        
+            levelButton.size.set(250, 200);
+            (levelButton as Label).setTextColor(Color.WHITE);
+            levelButton.backgroundColor = Color.TRANSPARENT;
+            levelButton.onClickEventId = "level" + (index + 1);
+        });
+
         // Controls screen
         this.controls = this.addUILayer("controls");
         this.controls.setHidden(true);
@@ -115,15 +154,14 @@ export default class MainMenu extends Scene {
         const controlPhoto = this.add.sprite("backgroundImage", "controls");
         controlPhoto.position.set(center.x, center.y);
 
-        const controlBack = new Rect(new Vec2(center.x , center.y), new Vec2(400, 600));
+        const controlBack = new Rect(new Vec2(center.x , center.y - 20), new Vec2(400, 420));
         controlBack.borderWidth = 2;
         controlBack.borderColor = new Color(128, 128, 128);
         controlBack.color = new Color(192, 192, 192);
         this.controls.addNode(controlBack);
 
-        const header = <Label>this.add.uiElement(UIElementType.LABEL, "controls", {position: new Vec2(center.x, center.y - 250), text: "CONTROL"});
-        header.textColor = new Color(102, 102, 255);
-
+        const header = <Label>this.add.uiElement(UIElementType.LABEL, "controls", {position: new Vec2(center.x, center.y - 200), text: "CONTROL"});
+        header.textColor = Color.BLACK;
 
 
         const w = <Label>this.add.uiElement(UIElementType.LABEL, "controls", {position: new Vec2(center.x, center.y - 150), text: "W : Move Up  "});
@@ -245,6 +283,12 @@ export default class MainMenu extends Scene {
         this.receiver.subscribe("help");
         this.receiver.subscribe("menu");
         this.receiver.subscribe("click");
+        this.receiver.subscribe("level1");
+        this.receiver.subscribe("level2");
+        this.receiver.subscribe("level3");
+        this.receiver.subscribe("level4");
+        this.receiver.subscribe("level5");
+        this.receiver.subscribe("level6");
 
     }
 
@@ -264,7 +308,9 @@ export default class MainMenu extends Scene {
     public handleEvent(event: GameEvent): void {
         switch(event.type) {
             case "play": {
-                this.sceneManager.changeToScene(MainScene);
+                this.mainMenu.setHidden(true);
+                this.level.setHidden(false);
+                //this.sceneManager.changeToScene(MainScene);
                 break;
             }
             case "control": {
@@ -281,6 +327,11 @@ export default class MainMenu extends Scene {
                 this.controls.setHidden(true);
                 this.help.setHidden(true);
                 this.mainMenu.setHidden(false);
+                break;
+            }
+            case "level1": {
+                console.log("1레벨 진입");
+                this.sceneManager.changeToScene(MainScene);
                 break;
             }
         }
