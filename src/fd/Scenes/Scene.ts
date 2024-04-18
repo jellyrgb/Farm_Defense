@@ -5,7 +5,7 @@ import Seed from "../GameSystems/ItemSystem/Items/Seed";
 import Battler from "../GameSystems/BattleSystem/Battler";
 
 
-export default abstract class HW4Scene extends Scene {
+export default abstract class FDScene extends Scene {
 
     public abstract getBattlers(): Battler[];
 

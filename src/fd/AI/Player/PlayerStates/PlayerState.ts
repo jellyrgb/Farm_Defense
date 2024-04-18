@@ -13,13 +13,12 @@ export enum PlayerAnimationType {
     MOVE_LEFT = "MOVE_LEFT",
     MOVE_RIGHT = "MOVE_RIGHT",
     PICK_UP = "PICK_UP",
-    USE = "USE"
+    DROP = "DROP"
 }
 
 export enum PlayerStateType {
     IDLE = "IDLE",
     INVINCIBLE = "INVINCIBLE",
-    ATTACKING = "ATTACKING",
     MOVING = "MOVING",
     MOVE_UP = "MOVE_UP",
     MOVE_DOWN = "MOVE_DOWN",
@@ -47,14 +46,17 @@ export default abstract class PlayerState extends State {
 
         // Handle the player trying to pick up an item
         if (this.parent.controller.pickingUp) {
-            // Request an item from the scene
-            this.emitter.fireEvent(ItemEvent.ITEM_REQUEST, {node: this.owner, inventory: this.owner.inventory});
             // Play pick up animation
             this.owner.animation.play(PlayerAnimationType.PICK_UP, false);
+
+            // Request an item from the scene
+            this.emitter.fireEvent(ItemEvent.ITEM_REQUEST, {node: this.owner, inventory: this.owner.inventory});
         }
 
         // Handle the player trying to drop an item
         if (this.parent.controller.dropping) {
+            this.owner.animation.play(PlayerAnimationType.DROP, false);
+
             // Place the seed on the ground which is the player's current position
             const item = this.owner.inventory.find(item => item instanceof Item) as Item | null;
             if (item !== null) {
@@ -66,17 +68,6 @@ export default abstract class PlayerState extends State {
             }
         }
 
-        if (this.parent.controller.useItem) {
-            // Play use animation
-            this.owner.animation.play(PlayerAnimationType.USE, false);
-
-            // Use the item
-            const item = this.owner.inventory.find(item => item instanceof Item) as Item | null;
-            if (item !== null) {
-                // Emit an event to use the item
-                this.emitter.fireEvent(ItemEvent.ITEM_USED, {item: item, node: this.owner});
-            }
-        }
     }
 
     public override handleInput(event: GameEvent): void {

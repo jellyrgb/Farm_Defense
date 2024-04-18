@@ -8,7 +8,7 @@ import Scene from "../../../Wolfie2D/Scene/Scene";
 import BasicTargetable from "../Targeting/BasicTargetable";
 import BasicTargeting from "../Targeting/BasicTargeting";
 
-import HW4Scene from "../../Scenes/Scene";
+import FDScene from "../../Scenes/Scene";
 import Inventory from "./Inventory";
 import { TargetableEntity } from "../Targeting/TargetableEntity";
 import { TargetingEntity } from "../Targeting/TargetingEntity";

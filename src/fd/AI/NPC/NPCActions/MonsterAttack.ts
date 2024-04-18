@@ -29,12 +29,14 @@ export default class MonsterAttack extends NPCAction {
             // Play the attacking animation of the monster
             this.actor.animation.play("ATTACKING", false);
 
-            // Send a attacked event
-            this.emitter.fireEvent(BattlerEvent.BATTLER_ATTACKED, {
-                attacker: this.actor,
-                target: target,
-                damage: 10
-            });
+            if (this.actor.battleGroup === 2) {
+                // Send a attack event
+                this.emitter.fireEvent(BattlerEvent.BATTLER_ATTACK, {
+                    attacker: this.actor,
+                    target: target,
+                    damage: 10
+                });
+            }
 
             this.timer.start();
         }

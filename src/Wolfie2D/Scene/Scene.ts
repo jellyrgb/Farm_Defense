@@ -91,6 +91,8 @@ export default class Scene implements Updateable {
     /** The configuration options for this scene */
     public sceneOptions: SceneOptions;
 
+    public paused : boolean = false;
+
     /**
      * Creates a new Scene. To add a new Scene in your game, use changeToScene() in @reference[SceneManager]
      * @param viewport The viewport of the game
@@ -150,6 +152,12 @@ export default class Scene implements Updateable {
     unloadScene(): void {}
 
     update(deltaT: number): void {
+        if (this.paused) {
+            this.updateScene(deltaT);
+            this.sceneGraph.update(deltaT);
+            this.physicsManager.update(deltaT);
+            return; 
+        }
         this.updateScene(deltaT);
 
         // Do time updates
@@ -365,15 +373,15 @@ export default class Scene implements Updateable {
         } else {
             return this.viewport.getOrigin();
         }
-	}
+   }
 
     /**
      * Returns the scale level of the view
      * @returns The zoom level of the viewport
     */
-	getViewScale(): number {
-		return this.viewport.getZoomLevel();
-	}
+   getViewScale(): number {
+      return this.viewport.getZoomLevel();
+   }
 
     /**
      * Returns the Viewport associated with this scene
@@ -444,5 +452,15 @@ export default class Scene implements Updateable {
         }
 
         return null;
+    }
+
+    pause(): void{
+        if(!this.paused){
+            this.paused = true;
+        }
+    }
+
+    resume(): void{
+        this.paused = false;
     }
 }

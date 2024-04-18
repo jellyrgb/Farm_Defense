@@ -56,7 +56,6 @@ export default abstract class NPCAction extends GoapAction {
     }
 
     public update(deltaT: number): void {
-        // TODO get the NPCs to move on their paths
         if( this.path && !this.path.isDone()){
             //if there is a path, move on
             this.actor.moveOnPath(1, this.path);

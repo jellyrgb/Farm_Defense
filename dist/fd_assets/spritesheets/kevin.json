@@ -135,7 +135,7 @@
             ]
         },
         {
-            "name": "USE",
+            "name": "DROP",
             "repeat": true,
             "frames": [
                 {

@@ -30,7 +30,7 @@ export default class TurretAttack extends NPCAction {
             this.actor.animation.play("ATTACKING", false);
 
             // Send a attacked event
-            this.emitter.fireEvent(BattlerEvent.BATTLER_ATTACKED, {
+            this.emitter.fireEvent(BattlerEvent.BATTLER_ATTACK, {
                 attacker: this.actor,
                 target: target,
                 damage: 10

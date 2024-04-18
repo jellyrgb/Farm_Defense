@@ -18,6 +18,7 @@ export default class BasicBattler implements Battler {
     protected _battleGroup: number;
     protected _speed: number;
     protected _active: boolean;
+    protected _attackDamage: number;
 
     public constructor(owner: Unique & Positioned) {
         this._owner = owner;

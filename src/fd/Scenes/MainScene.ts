@@ -38,6 +38,8 @@ import Input from "../../Wolfie2D/Input/Input";
 import MainMenu from "./MainMenu";
 import Label from "../../Wolfie2D/Nodes/UIElements/Label";
 import Rect from "../../Wolfie2D/Nodes/Graphics/Rect";
+import TextInput from "../../Wolfie2D/Nodes/UIElements/TextInput";
+import TurretBehavior from "../AI/NPC/NPCBehavior/TurretBehavior";
 
 const BattlerGroups = {
     TURRET: 1,
@@ -67,6 +69,8 @@ export default class MainScene extends Scene {
     // pause menu layer
     private pauseMenu: Layer;
 
+    private textInput: Layer;
+
     private pausedLabel: Label;
 
     private floors: OrthogonalTilemap;
@@ -86,6 +90,7 @@ export default class MainScene extends Scene {
     public override loadScene() {
         // Load the player and enemy spritesheets
         this.load.spritesheet("player", "fd_assets/spritesheets/kevin.json");
+        this.load.spritesheet("home", "fd_assets/spritesheets/home.json");
 
         // Load in the enemy and turret sprites
         this.load.spritesheet("monsterA", "fd_assets/spritesheets/monsterA.json");
@@ -109,28 +114,68 @@ export default class MainScene extends Scene {
         this.load.image("tomato_sprite", "fd_assets/sprites/tomato_sprite.png");
 
     }
+
     /**
      * @see Scene.startScene
      */
     public override startScene() {
         const center = this.viewport.getCenter();
 
+        // pause menu initialize
         this.pauseMenu = this.addUILayer("pauseMenu");
         this.pauseMenu.setHidden(true);
 
-        const resume = this.add.uiElement(UIElementType.BUTTON, "pauseMenu", {position: new Vec2(center.x, center.y + 250), text: "Resume"});
-        resume.size.set(200, 100);
-        resume.backgroundColor = Color.TRANSPARENT;
-        resume.onClickEventId = "resumeGame";
-        
-        // Main Menu Button
-        const mainMenuButton = this.add.uiElement(UIElementType.BUTTON, "pauseMenu", {position: new Vec2(center.x, center.y + 50), text: "Main Menu"});
-        mainMenuButton.size.set(200, 100);
-        mainMenuButton.backgroundColor = Color.TRANSPARENT;
+        const pauseMenuLayer = this.getLayer("pauseMenu");
+
+        const centerESC = new Vec2(200, 200);
+
+        const menuBackground = new Rect(new Vec2(centerESC.x - 25, centerESC.y - 25), new Vec2(300, 300));
+        menuBackground.color = new Color(0, 0, 0, 0.9);
+        menuBackground.borderColor = new Color(255, 255, 255);
+        menuBackground.borderWidth = 2;
+        pauseMenuLayer.addNode(menuBackground);
+
+        // Create buttons
+        const resumeButton = this.add.uiElement(UIElementType.BUTTON, "pauseMenu", {position: new Vec2(centerESC.x - 25, centerESC.y - 95),text: "Resume"});
+        resumeButton.size.set(100, 100);
+        resumeButton.onClickEventId = "resumeGame";
+
+        const cheatButton = this.add.uiElement(UIElementType.BUTTON, "pauseMenu", {position: new Vec2(centerESC.x - 25, centerESC.y - 25),text: "Cheat Code"});
+        cheatButton.size.set(100, 100);
+        cheatButton.onClickEventId = "cheat";
+
+        const mainMenuButton = this.add.uiElement(UIElementType.BUTTON, "pauseMenu", {position: new Vec2(centerESC.x - 25, centerESC.y + 50),text: "Main Menu"});
+        mainMenuButton.size.set(100, 100);
         mainMenuButton.onClickEventId = "backToMainMenu";
+        
+
+        // cheat text input
+        this.textInput = this.addUILayer("textInput");
+        this.textInput.setHidden(true);
+
+        const textInputLayer = this.getLayer("textInput");
+
+        const background = new Rect(new Vec2(centerESC.x - 25, centerESC.y - 25), new Vec2(500, 200));
+        background.color = new Color(0, 0, 0);
+        background.borderColor = new Color(255, 255, 255);
+        background.borderWidth = 2;
+        textInputLayer.addNode(background);
+
+
+        const inputText = this.add.uiElement(UIElementType.TEXT_INPUT, "textInput", {position: new Vec2(centerESC.x - 60 , centerESC.y - 30)});
+        inputText.size.set(600, 100);
+
+
+        const submitButton = this.add.uiElement(UIElementType.BUTTON, "textInput", {position: new Vec2(300, 170),text: "Submit"});
+        submitButton.onClickEventId = "submitCheat";
+        submitButton.backgroundColor = Color.TRANSPARENT;
+        submitButton.size.set(100, 50);
+
     
         this.receiver.subscribe("resumeGame");
         this.receiver.subscribe("backToMainMenu");
+        this.receiver.subscribe("cheat");
+        this.receiver.subscribe("submitCheat");
 
         // Add in the tilemap
         let tilemapLayers = this.add.tilemap("level1");
@@ -162,7 +207,6 @@ export default class MainScene extends Scene {
         this.receiver.subscribe(ItemEvent.ITEM_GROW_UP);
         this.receiver.subscribe(ItemEvent.ITEM_PICKED_UP);
         this.receiver.subscribe(ItemEvent.ITEM_DROPPED);
-        this.receiver.subscribe(ItemEvent.ITEM_USED);
 
         // Add a UI for health
         this.addUILayer("health");
@@ -171,12 +215,23 @@ export default class MainScene extends Scene {
         this.receiver.subscribe(BattlerEvent.BATTLER_KILLED);
         this.receiver.subscribe(BattlerEvent.BATTLER_RESPAWN);
     }
+
     /**
      * @see Scene.updateScene
      */
     public override updateScene(deltaT: number): void {
+
         while (this.receiver.hasNextEvent()) {
             this.handleEvent(this.receiver.getNextEvent());
+        }
+
+        //esc menu 
+        if (Input.isKeyJustPressed("escape")) {       
+            this.pause();
+            this.togglePauseMenu();
+            if(!this.textInput.isHidden()){
+                this.CheatInput();
+            }
         }
 
         // prevent player escape from map
@@ -207,9 +262,7 @@ export default class MainScene extends Scene {
             player.position = currentPosition;
         }
 
-        if (Input.isKeyJustPressed("escape")) {       
-            this.togglePauseMenu();
-        }
+
         this.inventoryHud.update(deltaT);
         this.healthbars.forEach(healthbar => healthbar.update(deltaT));
     }
@@ -217,45 +270,38 @@ export default class MainScene extends Scene {
     private togglePauseMenu(): void {
         const pauseMenuLayer = this.getLayer("pauseMenu");
         const isHidden = pauseMenuLayer.isHidden();
-        pauseMenuLayer.setHidden(!isHidden);
+
     
-        const center = new Vec2(200, 200);
-        
         if (!isHidden) {
-            if (this.pausedLabel) {
-                this.pausedLabel.destroy();
-                this.pausedLabel = null;
-            }
-        } else {
-                const menuBackground = new Rect(new Vec2(center.x - 25, center.y - 25), new Vec2(300, 300));
-                menuBackground.color = new Color(0, 0, 0, 0.9);
-                menuBackground.borderColor = new Color(255, 255, 255);
-                menuBackground.borderWidth = 2;
-                pauseMenuLayer.addNode(menuBackground);
-        
-                // Create buttons
-                const resumeButton = this.add.uiElement(UIElementType.BUTTON, "pauseMenu", {
-                    position: new Vec2(center.x - 25, center.y - 95),
-                    text: "Resume"
-                });
-                resumeButton.size.set(300, 100);
-                resumeButton.onClickEventId = "resumeGame";
-        
-                const controlsButton = this.add.uiElement(UIElementType.BUTTON, "pauseMenu", {
-                    position: new Vec2(center.x - 25, center.y - 25),
-                    text: "Controls"
-                });
-                controlsButton.size.set(300, 100);
-                controlsButton.onClickEventId = "showControls";
-        
-                const mainMenuButton = this.add.uiElement(UIElementType.BUTTON, "pauseMenu", {
-                    position: new Vec2(center.x - 25, center.y + 50),
-                    text: "Main Menu"
-                });
-                mainMenuButton.size.set(300, 100);
-                mainMenuButton.onClickEventId = "backToMainMenu";
-            }
+            this.paused = false;
+            pauseMenuLayer.setHidden(true);
+        } 
+        else {
+            pauseMenuLayer.setHidden(false);
         }
+    }
+
+    private CheatInput(): void{
+        const textInputLayer = this.getLayer("textInput");
+        const isHidden = textInputLayer.isHidden();
+
+        if(!this.paused){
+            this.paused = true;
+        }
+        
+        if (isHidden){
+            textInputLayer.setHidden(false);
+        }
+        else{
+            textInputLayer.setHidden(true);
+        }
+        
+        
+    }
+    
+    public handleCheatSubmission(cheatCode: string): void {
+        console.log("Cheat code processed:", cheatCode);
+    }
 
     /**
      * Handle events from the rest of the game
@@ -264,14 +310,29 @@ export default class MainScene extends Scene {
     public handleEvent(event: GameEvent): void {
         switch (event.type) {
             case "resumeGame": {
-                console.log("재시작");
-                this.togglePauseMenu(); // resume the game
+                this.resume();// resume the game
+                this.togglePauseMenu(); // hide the pausemenu
                 break;
             }
             case "backToMainMenu": {
-                console.log("메인메뉴로");
                 this.viewport.setZoomLevel(1);
                 this.sceneManager.changeToScene(MainMenu); // go to main menu
+                break;
+            }
+            case "cheat": {
+                this.togglePauseMenu();
+                this.CheatInput();
+                break;
+            }
+            case "submitCheat": {
+                console.log("치트코드 제출");
+                const textInputLayer = this.getLayer("textInput");
+                const textInputNode = textInputLayer.getItems().find(node => node instanceof TextInput) as TextInput;
+                if (textInputNode) {
+                    console.log("Entered cheat code:", textInputNode.text);
+                    this.handleCheatSubmission(textInputNode.text);
+                    textInputNode.text = "";
+                }
                 break;
             }
 
@@ -290,77 +351,15 @@ export default class MainScene extends Scene {
                 break;
             }
             case ItemEvent.ITEM_GROW_UP: {
-                let item = event.data.get("item");
-                // Change the sprite to tomato
-                item.changeSprite("tomato_sprite");
-
-                // Change the item into Turret object, and add it to the battlers
-                let turret = this.add.animatedSprite(NPCActor, "turretA", "primary");
-                /**
-                 * @todo 애니메이션 길이 수정
-                 */
-                turret.animation.play("GROW_UP", false);
-
-                turret.position.set(item.position.x, item.position.y);
-                turret.addPhysics(new AABB(Vec2.ZERO, new Vec2(7, 7)), null, false);
-                turret.battleGroup = 1;
-                turret.health = 10;
-                turret.maxHealth = 10;
-                turret.navkey = "navmesh";
-                // turret.addAI(TurretBehavior, {target: this.battlers[0], range: 100});
-                turret.animation.play("IDLE");
-                this.battlers.push(turret);
-
-                // Make the seed invisible
-                item.visible = false;
-
+                this.handleItemGrowUp(event);
                 break;
             }
             case ItemEvent.ITEM_PICKED_UP: {
-                // If the seed that was set invisible under the turret object is picked up, 
-                // revert the turret to seed, set visible, and put it back to the inventory
-                let item = event.data.get("item");
-                let inventory = event.data.get("inventory");
-                let node = event.data.get("node");
-
-                // Make the item visible
-                item.visible = true;
-                // Put the item back to the inventory
-                inventory.add(item);
-
-                // Remove the turret from the battlers
-                let turret = this.battlers.find(b => b.position.distanceTo(item.position) === 0);
-                this.battlers = this.battlers.filter(b => b !== turret);
-                
-                /**
-                 * @todo 터렛 화면에서 삭제
-                 */
-                
+                this.handleItemPickedUp(event);
                 break;
             }
             case ItemEvent.ITEM_DROPPED: {
-                // If the item is dropped on tile number 12, it will grow up
-                let item = event.data.get("item");
-                
-                // Get the col and row of the tile that the item is dropped
-                let col = item.position.x;
-                let row = item.position.y;
-                let tile = this.floors.getTilemapPosition(col, row);
-                console.log(tile);
-
-                // 위쪽 밭
-                if (tile.y >= 2 && tile.y <= 11) {
-                    // If tile.x is not 0, 1, 5, 6, 10, 11, 15, 16, 20, 21, 25, 26, 30, 31
-                    if (tile.x % 5 !== 0 && tile.x % 5 !== 1) {
-                        // Emit an event to make the item grow up
-                        this.emitter.fireEvent(ItemEvent.ITEM_GROW_UP, {item: item});
-                    }
-                }
-
-                // 아래쪽 밭
-                break;
-            }
-            case ItemEvent.ITEM_USED: {
+                this.handleItemDropped(event);
                 break;
             }
 
@@ -380,6 +379,74 @@ export default class MainScene extends Scene {
         if (items.length > 0) {
             inventory.add(items.reduce(ClosestPositioned(node)));
         }
+    }
+
+    protected handleItemGrowUp(event: GameEvent): void {
+        let item = event.data.get("item");
+        // Change the sprite to tomato
+        item.changeSprite("tomato_sprite");
+
+        // Change the item into Turret object, and add it to the battlers
+        let turret = this.add.animatedSprite(NPCActor, "turretA", "primary");
+        /**
+         * @todo 애니메이션 길이 수정
+         */
+        turret.animation.play("GROW_UP", false);
+
+        turret.position.set(item.position.x, item.position.y);
+        turret.addPhysics(new AABB(Vec2.ZERO, new Vec2(7, 7)), null, false);
+        turret.battleGroup = 1;
+        turret.health = 10;
+        turret.maxHealth = 10;
+        turret.navkey = "navmesh";
+        // turret.addAI(TurretBehavior, {target: this.battlers[0], range: 100});
+        turret.animation.play("IDLE");
+        this.battlers.push(turret);
+
+        // Make the seed invisible
+        item.visible = false;
+    }
+
+    protected handleItemPickedUp(event: GameEvent): void {
+        let item = event.data.get("item");
+        let inventory = event.data.get("inventory");
+        let node = event.data.get("node");
+
+        // Make the item visible
+        item.visible = true;
+        // Put the item back to the inventory
+        inventory.add(item);
+
+        // Remove the turret from the battlers
+        let turret = this.battlers.find(b => b.position.distanceTo(item.position) === 0);
+        this.battlers = this.battlers.filter(b => b !== turret);
+
+        /**
+         * @todo 터렛 화면에서 삭제
+         */
+    }
+
+    protected handleItemDropped(event: GameEvent): void {
+        // If the item is dropped on tile number 12, it will grow up
+        let item = event.data.get("item");
+                
+        // Get the col and row of the tile that the item is dropped
+        let col = item.position.x;
+        let row = item.position.y;
+        let tile = this.floors.getTilemapPosition(col, row);
+        console.log(tile);
+
+        // 위쪽 밭
+        if (tile.y >= 2 && tile.y <= 11) {
+            // If tile.x is not 0, 1, 5, 6, 10, 11, 15, 16, 20, 21, 25, 26, 30, 31
+            if (tile.x % 5 !== 0 && tile.x % 5 !== 1) {
+                // Emit an event to make the item grow up
+                this.emitter.fireEvent(ItemEvent.ITEM_GROW_UP, {item: item});
+            }
+        }
+
+        // 아래쪽 밭
+        
     }
 
     /**
@@ -446,30 +513,30 @@ export default class MainScene extends Scene {
      */
     protected initializeNPCs(): void {
 
-        let test = this.load.getObject("test_location");
+        let home = this.load.getObject("test_location");
 
-        // Initialize the test enemies
-        for (let i = 0; i < test.enemies.length; i++) {
-            let npc = this.add.animatedSprite(NPCActor, "monsterC", "primary");
-            npc.position.set(test.enemies[i][0], test.enemies[i][1]);
-            npc.addPhysics(new AABB(Vec2.ZERO, new Vec2(7, 7)), null, false);
+        // Initialize the base (home)
+        for (let i = 0; i < home.enemies.length; i++) {
+            let baseNPC = this.add.animatedSprite(NPCActor, "home", "primary");
+            baseNPC.position.set(home.enemies[i][0], home.enemies[i][1]);
+            baseNPC.addPhysics(new AABB(Vec2.ZERO, new Vec2(7, 7)), null, false);
 
             // Give the NPCS their healthbars
-            let healthbar = new HealthbarHUD(this, npc, "primary", {size: npc.size.clone().scaled(2, 1/2), offset: npc.size.clone().scaled(0, -1/2)});
-            this.healthbars.set(npc.id, healthbar);
+            let healthbar = new HealthbarHUD(this, baseNPC, "primary", {size: baseNPC.size.clone().scaled(2, 1/2), offset: baseNPC.size.clone().scaled(0, -1/2)});
+            this.healthbars.set(baseNPC.id, healthbar);
 
-            npc.battleGroup = 1
-            npc.speed = 10;
-            npc.health = 10;
-            npc.maxHealth = 10;
-            npc.navkey = "navmesh";
+            baseNPC.battleGroup = 1
+            baseNPC.speed = 0;
+            baseNPC.health = 100;
+            baseNPC.maxHealth = 100;
+            baseNPC.navkey = "navmesh";
 
             // Give the NPCs their AI
-            //
+            baseNPC.addAI(TurretBehavior, {target: this.battlers[0], range: 1000});
             
-            npc.animation.play("IDLE");
+            baseNPC.animation.play("IDLE");
 
-            this.battlers.push(npc);
+            this.battlers.push(baseNPC);
         }
 
         // Get the object data for the blue enemies
@@ -491,10 +558,8 @@ export default class MainScene extends Scene {
             npc.maxHealth = 10;
             npc.navkey = "navmesh";
 
-            console.log(this.battlers[1]);
-
             // Give the NPCs their AI
-            // npc.addAI(EnemyBehavior, {target: this.battlers[1], range: 1000});
+            npc.addAI(EnemyBehavior, {target: this.battlers[0], range: 1000});
 
             // Play the NPCs "IDLE" animation 
             npc.animation.play("IDLE");
@@ -567,10 +632,10 @@ export default class MainScene extends Scene {
         // Add different strategies to use for this navmesh
         navmesh.registerStrategy("direct", new DirectStrategy(navmesh));
         navmesh.registerStrategy("astar", new AstarStrategy(navmesh));
-        //navmesh.setStrategy("direct"); // change to astar
+        navmesh.setStrategy("astar"); // change to astar
 
         // Add this navmesh to the navigation manager
-        //this.navManager.addNavigableEntity("navmesh", navmesh);
+        this.navManager.addNavigableEntity("navmesh", navmesh);
     }
 
     public getBattlers(): Battler[] { return this.battlers; }

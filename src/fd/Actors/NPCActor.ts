@@ -4,7 +4,7 @@ import AnimatedSprite from "../../Wolfie2D/Nodes/Sprites/AnimatedSprite"
 import NavigationPath from "../../Wolfie2D/Pathfinding/NavigationPath";
 import { BattlerEvent, HudEvent } from "../Events";
 import Inventory from "../GameSystems/ItemSystem/Inventory";
-import HW4Scene from "../Scenes/Scene";
+import FDScene from "../Scenes/Scene";
 import BasicTargetable from "../GameSystems/Targeting/BasicTargetable";
 import BasicTargeting from "../GameSystems/Targeting/BasicTargeting";
 
@@ -18,7 +18,7 @@ import Timer from "../../Wolfie2D/Timing/Timer";
 export default class NPCActor extends AnimatedSprite implements Battler, TargetingEntity {
 
     /** Override the type of the scene to be the HW4 scene */
-    protected scene: HW4Scene
+    protected scene: FDScene
 
     // An invincible timer for our NPCs
     protected invincibleTimer: Timer;
@@ -81,12 +81,12 @@ export default class NPCActor extends AnimatedSprite implements Battler, Targeti
             this.emitter.fireEvent(BattlerEvent.BATTLER_KILLED, {id: this.id});
         }
     }
-
+    
     public get speed(): number { return this.battler.speed; }
     public set speed(speed: number) { this.battler.speed = speed; }
 
-    public override setScene(scene: HW4Scene): void { this.scene = scene; }
-    public override getScene(): HW4Scene { return this.scene; }
+    public override setScene(scene: FDScene): void { this.scene = scene; }
+    public override getScene(): FDScene { return this.scene; }
 
     public get navkey(): string { return this._navkey; }
     public set navkey(navkey: string) { this._navkey = navkey; }
