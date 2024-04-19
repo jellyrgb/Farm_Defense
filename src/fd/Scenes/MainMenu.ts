@@ -4,11 +4,16 @@ import Layer from "../../Wolfie2D/Scene/Layer";
 import Scene from "../../Wolfie2D/Scene/Scene";
 import Color from "../../Wolfie2D/Utils/Color";
 import Label from "../../Wolfie2D/Nodes/UIElements/Label";
-import MainScene from "./MainScene";
+import Level1 from "./Level1";
 import GameEvent from "../../Wolfie2D/Events/GameEvent";
 import Input from "../../Wolfie2D/Input/Input";
 import Button from "../../Wolfie2D/Nodes/UIElements/Button";
 import Rect from "../../Wolfie2D/Nodes/Graphics/Rect"; 
+import Level2 from "../Scenes/Level2";
+import Level3 from "../Scenes/Level3";
+import Level4 from "../Scenes/Level4";
+import Level5 from "../Scenes/Level5";
+import Level6 from "../Scenes/Level6";
 
 export default class MainMenu extends Scene {
     // Layers, for multiple main menu screens
@@ -310,7 +315,7 @@ export default class MainMenu extends Scene {
             case "play": {
                 this.mainMenu.setHidden(true);
                 this.level.setHidden(false);
-                //this.sceneManager.changeToScene(MainScene);
+                // this.sceneManager.changeToScene(MainScene);
                 break;
             }
             case "control": {
@@ -331,7 +336,27 @@ export default class MainMenu extends Scene {
             }
             case "level1": {
                 console.log("1레벨 진입");
-                this.sceneManager.changeToScene(MainScene);
+                this.sceneManager.changeToScene(Level1);
+                break;
+            }
+            case "level2": {
+                this.sceneManager.changeToScene(Level2);
+                break;
+            }
+            case "level3": {
+                this.sceneManager.changeToScene(Level3);
+                break;
+            }
+            case "level4": {
+                this.sceneManager.changeToScene(Level4);
+                break;
+            }
+            case "level5": {
+                this.sceneManager.changeToScene(Level5);
+                break;
+            }
+            case "level6": {
+                this.sceneManager.changeToScene(Level6);
                 break;
             }
         }

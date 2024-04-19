@@ -18,7 +18,7 @@ import MonsterAttack from "../NPCActions/MonsterAttack";
 
 export default class EnemyBehavior extends NPCBehavior {
 
-    /** The target the guard should guard */
+    /** The target the enemy should attack */
     protected target: TargetableEntity;
     /** The range the guard should be from the target they're guarding to be considered guarding the target */
     protected range: number;
@@ -52,12 +52,13 @@ export default class EnemyBehavior extends NPCBehavior {
     }
 
     public update(deltaT: number): void {
+        
         // If there is turret in the scene, attack the turret first
         if (this.owner.getScene().getBattlers().length > 0) {
             this.owner.getScene().getBattlers().forEach(battler => {
                 if ((battler as any).type === "turret") {
                     console.log("Turret found!");
-                    this.target = battler;
+                    this.owner.setTarget(battler as TargetableEntity);
                 }
             });
         }
@@ -69,7 +70,7 @@ export default class EnemyBehavior extends NPCBehavior {
 
         let scene = this.owner.getScene();
 
-        // A status checking if there is a player in the scene
+        // A status checking if there is an enemy in the scene
         this.addStatus(EnemyStatuses.TARGETABLE_ENEMY_EXISTS, new TargetExists(scene.getBattlers(), new BasicFinder<Battler>()));
     
         // Add the goal status 

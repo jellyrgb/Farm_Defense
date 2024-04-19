@@ -47,7 +47,7 @@ const BattlerGroups = {
     ENEMY: 2
 } as const;
 
-export default class MainScene extends Scene {
+export default class Level3 extends Scene {
 
     /** GameSystems in the Scene */
     private inventoryHud: InventoryHUD;
@@ -441,7 +441,7 @@ export default class MainScene extends Scene {
         let healthbar = new HealthbarHUD(this, turret, "primary", {size: turret.size.clone().scaled(2, 1/2), offset: turret.size.clone().scaled(0, -1/2)});
         this.healthbars.set(turret.id, healthbar);
 
-        turret.addAI(TurretBehavior, {target: this.battlers[0], range: 100});
+        turret.addAI(TurretBehavior, {target: this.battlers[1], range: 1000});
         this.battlers.push(turret);
         this.turret = turret;
 
