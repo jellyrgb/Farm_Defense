@@ -11,7 +11,7 @@ export default abstract class FDScene extends Scene {
 
     public abstract getWalls(): OrthogonalTilemap;
 
-    public abstract getHealthpacks(): Seed[];
+    public abstract getSeeds(): Seed[];
 
     public abstract isTargetVisible(position: Vec2, target: Vec2): boolean;
     

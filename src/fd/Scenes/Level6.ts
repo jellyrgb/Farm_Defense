@@ -696,7 +696,7 @@ export default class Level6 extends Scene {
 
     public getWalls(): OrthogonalTilemap { return this.walls; }
 
-    public getHealthpacks(): Seed[] { return this.seeds; }
+    public getSeeds(): Seed[] { return this.seeds; }
 
     /**
      * Checks if the given target position is visible from the given position.
