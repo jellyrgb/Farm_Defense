@@ -20,7 +20,9 @@ interface HUDOptions {
 }
 
 /**
- * Manages the player inventory that is displayed in the UI.
+ * Manages the player inventory that is displayed in the UI. Fun fact, I actually managed to port this
+ * class from my old CSE-380 project from last semester.
+ * @author PeteyLumpkins
  */
 export default class InventoryHUD implements Updateable {
 
@@ -93,6 +95,35 @@ export default class InventoryHUD implements Updateable {
         }
     }
 
+    public updateItemPosition(item: Item, index: number): void {
+        if (index >= 0 && index < this.itemSlots.length) {
+            item.position.copy(this.itemSlots[index].position);
+        }
+    }
+    
+
+    public updateItemSlots(): void {
+        const viewport = this.scene.getViewport();
+        const halfSize = viewport.getHalfSize();
+        const baseX = viewport.getOrigin().x + 10;  // 화면 왼쪽 여백
+        const baseY = viewport.getOrigin().y + halfSize.y * 2 - 10;;  // 화면 하단에서 50픽셀 위
+        const items = Array.from(this.inventory.items());
+
+        let index = 0;
+        for (let sprite of this.itemSlots) {
+            sprite.position.set(baseX + index * (sprite.size.x + this.padding - 10), baseY);
+            
+            // 아이템의 위치도 업데이트 (해당 슬롯에 아이템이 있다면)
+            if (index < items.length) {
+                const item = items[index];
+                item.position.copy(sprite.position);
+            }
+    
+            index++;
+        }
+        
+    }
+    
     public update(deltaT: number): void {
         
         let index = 0;
@@ -101,7 +132,6 @@ export default class InventoryHUD implements Updateable {
             item.visible = true;
             index += 1;
         }
-
     }
 
 }

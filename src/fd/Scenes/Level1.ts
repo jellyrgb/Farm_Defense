@@ -290,7 +290,7 @@ export default class Level1 extends Scene {
             this.handleEvent(this.receiver.getNextEvent());
         }
 
-        //esc menu 
+        // esc menu 
         if (Input.isKeyJustPressed("escape")) {       
             this.pause();
             this.togglePauseMenu();
@@ -302,7 +302,7 @@ export default class Level1 extends Scene {
         // prevent player escape from map
         let player = this.battlers.find(b => b instanceof PlayerActor) as PlayerActor;
         let currentPosition = player.position.clone();
-    
+
         // boundary
         const maxX = 512;
         const maxY = 960;
@@ -326,8 +326,7 @@ export default class Level1 extends Scene {
         if (adjusted) {
             player.position = currentPosition;
         }
-
-
+        this.inventoryHud.updateItemSlots();
         this.inventoryHud.update(deltaT);
         this.healthbars.forEach(healthbar => healthbar.update(deltaT));
     }
@@ -496,6 +495,10 @@ export default class Level1 extends Scene {
         item.visible = true;
         // Put the item back to the inventory
         inventory.add(item);
+
+
+        let index = inventory.indexOf(item)
+        this.inventoryHud.updateItemPosition(item, index);
 
         // Remove the turret from the battlers
         let turret = this.battlers.find(b => b.position.distanceTo(item.position) < 10);
