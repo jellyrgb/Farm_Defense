@@ -71,7 +71,10 @@ export default class MainScene extends Scene {
 
     private textInput: Layer;
 
-    private pausedLabel: Label;
+    private blueEnemyCount: number;
+
+
+    private enemyCount : Layer;
 
     private floors: OrthogonalTilemap;
 
@@ -97,6 +100,7 @@ export default class MainScene extends Scene {
         this.load.spritesheet("monsterB", "fd_assets/spritesheets/monsterB.json");
         this.load.spritesheet("monsterC", "fd_assets/spritesheets/monsterC.json");
         this.load.spritesheet("turretA", "fd_assets/spritesheets/turretA.json");
+        this.load.image("monsterBLogo", "fd_assets/sprites/logoB.png")
 
         // Load the tilemap
         this.load.tilemap("level1", "fd_assets/tilemaps/level1.json");
@@ -121,9 +125,12 @@ export default class MainScene extends Scene {
     public override startScene() {
         const center = this.viewport.getCenter();
 
+        
+
         // pause menu initialize
         this.pauseMenu = this.addUILayer("pauseMenu");
         this.pauseMenu.setHidden(true);
+    
 
         const pauseMenuLayer = this.getLayer("pauseMenu");
 
@@ -200,6 +207,23 @@ export default class MainScene extends Scene {
 
         // Create the NPCS
         this.initializeNPCs();
+
+
+        this.enemyCount = this.addUILayer("enemyCount");
+        this.enemyCount.setHidden(false);
+
+        const monsterPhoto = this.add.sprite("monsterBLogo", "enemyCount");
+        monsterPhoto.position.set(300, 10);
+
+        this.blueEnemyCount = this.calculateBlueEnemies();
+
+
+        const enemyCountLabel = this.add.uiElement(UIElementType.LABEL, "enemyCount", {position: new Vec2(324, 10),
+            text: "x " + this.blueEnemyCount
+        });
+        (enemyCountLabel as Label).setTextColor(Color.WHITE);
+        (enemyCountLabel as Label).fontSize = 24;
+
 
         // Subscribe to relevant events
         this.receiver.subscribe("enemyDied");
@@ -637,6 +661,11 @@ export default class MainScene extends Scene {
         // Add this navmesh to the navigation manager
         this.navManager.addNavigableEntity("navmesh", navmesh);
     }
+
+    public calculateBlueEnemies(): number {
+        return this.battlers.filter(b => b instanceof NPCActor && b.battleGroup === BattlerGroups.ENEMY).length;
+    }
+
 
     public getBattlers(): Battler[] { return this.battlers; }
 
