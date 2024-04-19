@@ -13,10 +13,10 @@ import GameEvent from "../../../../Wolfie2D/Events/GameEvent";
 import GoapAction from "../../../../Wolfie2D/AI/Goap/GoapAction";
 import GoapState from "../../../../Wolfie2D/AI/Goap/GoapState";
 import Battler from "../../../GameSystems/BattleSystem/Battler";
-import MonsterAttack from "../NPCActions/MonsterAttack";
+import TurretAttack from "../NPCActions/MonsterAttack";
 
 
-export default class EnemyBehavior extends NPCBehavior {
+export default class TurretBehavior extends NPCBehavior {
 
     /** The target the guard should guard */
     protected target: TargetableEntity;
@@ -59,9 +59,11 @@ export default class EnemyBehavior extends NPCBehavior {
 
         let scene = this.owner.getScene();
 
-        // A status checking if there is a player in the scene
-        this.addStatus(TurretStatuses.TARGETABLE_ENEMY_EXISTS, new TargetExists(scene.getBattlers(), new BasicFinder<Battler>()));
-    
+        // A status checking if there are any enemies at target the guard is guarding
+        let enemyBattlerFinder = new BasicFinder<Battler>(null, BattlerActiveFilter(), EnemyFilter(this.owner), RangeFilter(this.target, 0, this.range*this.range))
+        let enemyAtGuardPosition = new TargetExists(scene.getBattlers(), enemyBattlerFinder)
+        this.addStatus(TurretStatuses.ENEMY_IN_GUARD_POSITION, enemyAtGuardPosition);
+
         // Add the goal status 
         this.addStatus(TurretStatuses.GOAL, new FalseStatus());
     }
@@ -71,15 +73,15 @@ export default class EnemyBehavior extends NPCBehavior {
         let scene = this.owner.getScene();
 
         // An action for attacking enemy in the scene
-        let attackMonster = new MonsterAttack(this, this.owner);
+        let attackMonster = new TurretAttack(this, this.owner);
         attackMonster.targets = scene.getBattlers();
         attackMonster.targetFinder = new BasicFinder<Battler>(ClosestPositioned(this.owner), BattlerActiveFilter(), EnemyFilter(this.owner), RangeFilter(this.target, 0, this.range*this.range));
-        attackMonster.addPrecondition(TurretStatuses.TARGETABLE_ENEMY_EXISTS);
+        attackMonster.addPrecondition(TurretStatuses.ENEMY_IN_GUARD_POSITION);
         attackMonster.addEffect(TurretStatuses.GOAL);
         attackMonster.cost = 1;
         this.addState(TurretActions.ATTACK, attackMonster);
 
-        // An action for guarding the guard's guard location
+        // An action for guarding the location that the turret is currently at
         let idle = new Idle(this, this.owner);
         idle.targets = [this.target];
         idle.targetFinder = new BasicFinder();

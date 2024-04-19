@@ -40,6 +40,7 @@ import Label from "../../Wolfie2D/Nodes/UIElements/Label";
 import Rect from "../../Wolfie2D/Nodes/Graphics/Rect";
 import TextInput from "../../Wolfie2D/Nodes/UIElements/TextInput";
 import TurretBehavior from "../AI/NPC/NPCBehavior/TurretBehavior";
+import BaseBehavior from "../AI/NPC/NPCBehavior/BaseBehavior";
 
 const BattlerGroups = {
     TURRET: 1,
@@ -73,6 +74,7 @@ export default class MainScene extends Scene {
 
     private blueEnemyCount: number;
 
+    private turret: NPCActor;
 
     private enemyCount : Layer;
 
@@ -183,6 +185,7 @@ export default class MainScene extends Scene {
         this.receiver.subscribe("backToMainMenu");
         this.receiver.subscribe("cheat");
         this.receiver.subscribe("submitCheat");
+        this.receiver.subscribe("growFinish");
 
         // Add in the tilemap
         let tilemapLayers = this.add.tilemap("level1");
@@ -359,6 +362,12 @@ export default class MainScene extends Scene {
                 }
                 break;
             }
+            case "growFinish":
+                if (this.turret) {
+                    console.log("성장 끝, 보통 모션 출력");
+                    this.turret.animation.play("IDLE", true);
+                }
+            break;
 
             // Battle Events
             case BattlerEvent.BATTLER_KILLED: {
@@ -388,7 +397,7 @@ export default class MainScene extends Scene {
             }
 
             default: {
-                throw new Error(`Unhandled event type "${event.type}" caught in HW4Scene event handler`);
+                throw new Error(`Unhandled event type "${event.type}" caught in event handler`);
             }
 
         }
@@ -409,23 +418,32 @@ export default class MainScene extends Scene {
         let item = event.data.get("item");
         // Change the sprite to tomato
         item.changeSprite("tomato_sprite");
-
+        
         // Change the item into Turret object, and add it to the battlers
         let turret = this.add.animatedSprite(NPCActor, "turretA", "primary");
         /**
          * @todo 애니메이션 길이 수정
          */
-        turret.animation.play("GROW_UP", false);
+        turret.animation.play("GROW_UP", false, "growFinish");
+        console.log("성장 모션");
 
         turret.position.set(item.position.x, item.position.y);
-        turret.addPhysics(new AABB(Vec2.ZERO, new Vec2(7, 7)), null, false);
+        turret.addPhysics(new AABB(Vec2.ZERO, new Vec2(7, 7)), null, true, true);
         turret.battleGroup = 1;
+        
+        turret.type = "turret";
+        turret.speed = 0;
         turret.health = 10;
         turret.maxHealth = 10;
         turret.navkey = "navmesh";
-        // turret.addAI(TurretBehavior, {target: this.battlers[0], range: 100});
-        turret.animation.play("IDLE");
+
+        // Give the NPCS their healthbars
+        let healthbar = new HealthbarHUD(this, turret, "primary", {size: turret.size.clone().scaled(2, 1/2), offset: turret.size.clone().scaled(0, -1/2)});
+        this.healthbars.set(turret.id, healthbar);
+
+        turret.addAI(TurretBehavior, {target: this.battlers[0], range: 100});
         this.battlers.push(turret);
+        this.turret = turret;
 
         // Make the seed invisible
         item.visible = false;
@@ -470,7 +488,13 @@ export default class MainScene extends Scene {
         }
 
         // 아래쪽 밭
-        
+        if (tile.y >= 17 && tile.y <= 20) {
+            // If tile.x is 1~14 or 18~30
+            if (tile.x >= 1 && tile.x <= 14 || tile.x >= 18 && tile.x <= 30) {
+                // Emit an event to make the item grow up
+                this.emitter.fireEvent(ItemEvent.ITEM_GROW_UP, {item: item});
+            }
+        }
     }
 
     /**
@@ -549,14 +573,14 @@ export default class MainScene extends Scene {
             let healthbar = new HealthbarHUD(this, baseNPC, "primary", {size: baseNPC.size.clone().scaled(2, 1/2), offset: baseNPC.size.clone().scaled(0, -1/2)});
             this.healthbars.set(baseNPC.id, healthbar);
 
+            baseNPC.type = "base";
             baseNPC.battleGroup = 1
             baseNPC.speed = 0;
             baseNPC.health = 100;
             baseNPC.maxHealth = 100;
             baseNPC.navkey = "navmesh";
 
-            // Give the NPCs their AI
-            baseNPC.addAI(TurretBehavior, {target: this.battlers[0], range: 1000});
+            baseNPC.addAI(BaseBehavior);
             
             baseNPC.animation.play("IDLE");
 
@@ -576,10 +600,11 @@ export default class MainScene extends Scene {
             let healthbar = new HealthbarHUD(this, npc, "primary", {size: npc.size.clone().scaled(2, 1/2), offset: npc.size.clone().scaled(0, -1/2)});
             this.healthbars.set(npc.id, healthbar);
 
+            npc.type = "monster";
             npc.battleGroup = 2
-            npc.speed = 10;
-            npc.health = 10;
-            npc.maxHealth = 10;
+            npc.speed = 100;
+            npc.health = 50;
+            npc.maxHealth = 50;
             npc.navkey = "navmesh";
 
             // Give the NPCs their AI

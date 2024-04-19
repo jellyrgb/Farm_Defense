@@ -25,7 +25,6 @@ export default class AstarStrategy extends NavPathStrat {
      */
     public buildPath(to: Vec2, from: Vec2): NavigationPath {
 
-
         //console.log("A* search algorithm begin");
         let start = this.mesh.graph.snap(from);
         let end = this.mesh.graph.snap(to);
@@ -43,22 +42,15 @@ export default class AstarStrategy extends NavPathStrat {
         let fScore = new Array(this.mesh.graph.numVertices).fill(Infinity);
         fScore[start] = this.heuristic(from, to); // initial heuristic estimation
        
-
-
         //A* algorithm loop
-
-
         while (openSet.length > 0 ) {
             let current = this.lowestF(openSet, fScore);
             if ( current === end ) {
                 return new NavigationPath(this.reconstructPath(previous, current, this.mesh.graph));
             }
 
-
             openSet.splice( openSet.indexOf(current), 1 );
             // remove current from openSet
-
-
             let neighbors = this.mesh.graph.getEdges(current);
 
             // this go through all neighbors of current
@@ -86,7 +78,6 @@ export default class AstarStrategy extends NavPathStrat {
                 lowest = i;
             }
         }
-
         // return the node that has least fScore
         return lowest;
     }
@@ -108,17 +99,12 @@ export default class AstarStrategy extends NavPathStrat {
         return path;
     }
    
-   
-
-
     private heuristic(position1: Vec2, position2: Vec2): number {
         let direct_distace = position1.distanceTo(position2);
         // heuristic based on euclid distance
-
-
         return direct_distace;
     }
 
-
+    
 }
 

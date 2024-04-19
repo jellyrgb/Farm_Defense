@@ -52,6 +52,16 @@ export default class EnemyBehavior extends NPCBehavior {
     }
 
     public update(deltaT: number): void {
+        // If there is turret in the scene, attack the turret first
+        if (this.owner.getScene().getBattlers().length > 0) {
+            this.owner.getScene().getBattlers().forEach(battler => {
+                if ((battler as any).type === "turret") {
+                    console.log("Turret found!");
+                    this.target = battler;
+                }
+            });
+        }
+
         super.update(deltaT);
     }
 
