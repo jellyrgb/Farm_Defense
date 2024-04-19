@@ -13,7 +13,7 @@ import GameEvent from "../../../../Wolfie2D/Events/GameEvent";
 import GoapAction from "../../../../Wolfie2D/AI/Goap/GoapAction";
 import GoapState from "../../../../Wolfie2D/AI/Goap/GoapState";
 import Battler from "../../../GameSystems/BattleSystem/Battler";
-import TurretAttack from "../NPCActions/MonsterAttack";
+import TurretAttack from "../NPCActions/TurretAttack";
 
 
 export default class TurretBehavior extends NPCBehavior {
@@ -59,11 +59,9 @@ export default class TurretBehavior extends NPCBehavior {
 
         let scene = this.owner.getScene();
 
-        // A status checking if there are any enemies at target the guard is guarding
-        let enemyBattlerFinder = new BasicFinder<Battler>(null, BattlerActiveFilter(), EnemyFilter(this.owner), RangeFilter(this.target, 0, this.range*this.range))
-        let enemyAtGuardPosition = new TargetExists(scene.getBattlers(), enemyBattlerFinder)
-        this.addStatus(TurretStatuses.ENEMY_IN_GUARD_POSITION, enemyAtGuardPosition);
-
+        // A status checking if there is an enemy in the scene
+        this.addStatus(TurretStatuses.TARGETABLE_ENEMY_EXISTS, new TargetExists(scene.getBattlers(), new BasicFinder<Battler>()));
+    
         // Add the goal status 
         this.addStatus(TurretStatuses.GOAL, new FalseStatus());
     }
@@ -76,7 +74,7 @@ export default class TurretBehavior extends NPCBehavior {
         let attackMonster = new TurretAttack(this, this.owner);
         attackMonster.targets = scene.getBattlers();
         attackMonster.targetFinder = new BasicFinder<Battler>(ClosestPositioned(this.owner), BattlerActiveFilter(), EnemyFilter(this.owner), RangeFilter(this.target, 0, this.range*this.range));
-        attackMonster.addPrecondition(TurretStatuses.ENEMY_IN_GUARD_POSITION);
+        attackMonster.addPrecondition(TurretStatuses.TARGETABLE_ENEMY_EXISTS);
         attackMonster.addEffect(TurretStatuses.GOAL);
         attackMonster.cost = 1;
         this.addState(TurretActions.ATTACK, attackMonster);

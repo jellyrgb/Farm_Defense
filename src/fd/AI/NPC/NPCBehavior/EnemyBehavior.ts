@@ -57,8 +57,7 @@ export default class EnemyBehavior extends NPCBehavior {
         if (this.owner.getScene().getBattlers().length > 0) {
             this.owner.getScene().getBattlers().forEach(battler => {
                 if ((battler as any).type === "turret") {
-                    console.log("Turret found!");
-                    this.owner.setTarget(battler as TargetableEntity);
+                    this.target = battler;
                 }
             });
         }

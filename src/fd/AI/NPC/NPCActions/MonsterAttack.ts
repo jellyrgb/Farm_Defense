@@ -22,8 +22,6 @@ export default class MonsterAttack extends NPCAction {
     }
 
     public performAction(target: TargetableEntity): void {
-        this.timer.isStopped() ? console.log("Attack cooling down!") : console.log("Attack ready!");
-
         // If the target turret is near enough and attack is ready, play attacking animation and deal damage
         if (this.timer.isStopped() && this.actor.position.distanceTo(target.position) < 50) {
             // Play the attacking animation of the monster

@@ -80,6 +80,8 @@ export default class Level1 extends Scene {
 
     private floors: OrthogonalTilemap;
 
+    private timer : Layer;
+
     public constructor(viewport: Viewport, sceneManager: SceneManager, renderingManager: RenderingManager, options: Record<string, any>) {
         super(viewport, sceneManager, renderingManager, options);
 
@@ -119,6 +121,7 @@ export default class Level1 extends Scene {
         this.load.image("seed", "fd_assets/sprites/seed.png");
         this.load.image("inventorySlot", "fd_assets/sprites/inventory.png");
         this.load.image("tomato_sprite", "fd_assets/sprites/tomato_sprite.png");
+        this.load.image("timer", "fd_assets/sprites/moon.png");
 
     }
 
@@ -227,6 +230,40 @@ export default class Level1 extends Scene {
         });
         (enemyCountLabel as Label).setTextColor(Color.WHITE);
         (enemyCountLabel as Label).fontSize = 24;
+
+        this.timer = this.addUILayer("timer");
+        this.timer.setHidden(false);
+
+        const moonPhoto = this.add.sprite("timer", "timer");
+        moonPhoto.position.set(155,10);
+
+        const timerLabel = this.add.uiElement(UIElementType.LABEL, "timer", { position: new Vec2(180, 10), text: "2:01" });
+        (timerLabel as Label).setTextColor(Color.WHITE);
+        (timerLabel as Label).fontSize = 24;
+    
+        let duration = 120;
+        let interval = setInterval(() => {
+            let minutes = Math.floor(duration / 60);
+            let seconds = duration % 60;
+        
+            if (timerLabel) {
+                (timerLabel as Label).setText(`${minutes}:${seconds}`);
+            }
+        
+            if (duration <= 0) {
+                clearInterval(interval);
+                if (timerLabel) {
+                    (timerLabel as Label).setText(" ");
+                    setTimeout(() => {
+                        if (timerLabel) {
+                            timerLabel.destroy();
+                            this.timer.setHidden(true);
+                        }
+                    }, 1000);
+                }
+            }
+            duration -= 1;
+        }, 1000)
 
 
         // Subscribe to relevant events
@@ -422,16 +459,14 @@ export default class Level1 extends Scene {
         
         // Change the item into Turret object, and add it to the battlers
         let turret = this.add.animatedSprite(NPCActor, "turretA", "primary");
-        /**
-         * @todo 애니메이션 길이 수정
-         */
+   
         turret.animation.play("GROW_UP", false, "growFinish");
         console.log("성장 모션");
 
         turret.position.set(item.position.x, item.position.y);
-        turret.addPhysics(new AABB(Vec2.ZERO, new Vec2(7, 7)), null, true, true);
-        turret.battleGroup = 1;
+        turret.addPhysics(new AABB(Vec2.ZERO, new Vec2(7, 7)), null, false);
         
+        turret.battleGroup = 1;
         turret.type = "turret";
         turret.speed = 0;
         turret.health = 10;
@@ -442,12 +477,14 @@ export default class Level1 extends Scene {
         let healthbar = new HealthbarHUD(this, turret, "primary", {size: turret.size.clone().scaled(2, 1/2), offset: turret.size.clone().scaled(0, -1/2)});
         this.healthbars.set(turret.id, healthbar);
 
-        turret.addAI(TurretBehavior, {target: this.battlers[1], range: 1000});
-        this.battlers.push(turret);
-        this.turret = turret;
-
         // Make the seed invisible
         item.visible = false;
+
+        setTimeout(() => {
+            turret.addAI(TurretBehavior, {target: this.battlers[0], range: 1000});
+            this.battlers.push(turret);
+            this.turret = turret;
+        }, 1000);
     }
 
     protected handleItemPickedUp(event: GameEvent): void {
@@ -464,15 +501,39 @@ export default class Level1 extends Scene {
         let turret = this.battlers.find(b => b.position.distanceTo(item.position) === 0);
         this.battlers = this.battlers.filter(b => b !== turret);
 
-        // Remove the healthbar of the turret
-        this.healthbars.delete(turret.id);
-
-        // Remove turret from the scene
-        // turret.destroy();
+        // Consider turret is dead
+        this.emitter.fireEvent(BattlerEvent.BATTLER_KILLED, {id: turret.id});
     }
 
     protected handleItemDropped(event: GameEvent): void {
         let item = event.data.get("item");
+        let now = Date.now();
+
+        if (item.lastDropped && (now - item.lastDropped < 10000)) {
+            let remainingTime = (10000 - (now - item.lastDropped)) / 1000; // calculate in second
+
+            let wordTime = 10;
+            
+            setTimeout(() => {
+            // Output the screen message in the player's head: "The night has arrived"
+            const nightBackground = new Rect(new Vec2(180, 180), new Vec2(170 ,25));
+            nightBackground.color = new Color(0, 0, 0, 0.4);
+            this.enemyCount.addNode(nightBackground);
+
+            let message = this.add.uiElement(UIElementType.LABEL, "enemyCount", {position: new Vec2(180, 180), text: "Need "+ remainingTime +" seconds to planting"});
+            (message as Label).setTextColor(Color.WHITE);
+            (message as Label).fontSize = 24;
+            setTimeout(() => {
+                message.destroy();
+                nightBackground.color = new Color(0, 0, 0, 0.0);
+            }, 400);
+
+        }, wordTime);
+
+            return;
+        }
+
+        item.lastDropped = now;
                 
         // Get the col and row of the tile that the item is dropped
         let col = item.position.x;
@@ -536,7 +597,7 @@ export default class Level1 extends Scene {
 
         player.inventory.onChange = ItemEvent.INVENTORY_CHANGED
         this.inventoryHud = new InventoryHUD(this, player.inventory, "inventorySlot", {
-            start: new Vec2(232, 24),
+            start: new Vec2(232, 998),
             slotLayer: "slots",
             padding: 8,
             itemLayer: "items"
@@ -593,18 +654,20 @@ export default class Level1 extends Scene {
 
         setTimeout(() => {
             // Output the screen message in the player's head: "The night has arrived"
-            let message = this.add.uiElement(UIElementType.LABEL, "primary", {position: new Vec2(263, 240), text: "The night has arrived"});
+
+            const nightBackground = new Rect(new Vec2(0, 0), new Vec2(1000, 1000));
+            nightBackground.color = new Color(0, 0, 0, 0.8);
+            this.enemyCount.addNode(nightBackground);
+
+            let message = this.add.uiElement(UIElementType.LABEL, "enemyCount", {position: new Vec2(180, 180), text: "The night has arrived"});
             (message as Label).setTextColor(Color.WHITE);
             (message as Label).fontSize = 30;
             setTimeout(() => {
                 message.destroy();
+                nightBackground.color = new Color(0, 0, 0, 0.2);
             }, 3000);
 
             this.initializeMonsters();
-            // Change the map to level1_night
-            let tilemapLayers = this.add.tilemap("level1_night");
-            this.walls = <OrthogonalTilemap>tilemapLayers[1].getItems()[0];
-            this.floors = <OrthogonalTilemap>tilemapLayers[0].getItems()[0];
         }, waveTime);
 
         

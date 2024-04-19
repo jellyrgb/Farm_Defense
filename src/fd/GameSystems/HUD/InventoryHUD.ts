@@ -80,6 +80,9 @@ export default class InventoryHUD implements Updateable {
         let height = this.itemSlots[0].size.y * this.itemSlots[0].scale.y;
         for (let i = 0; i < this.size; i += 1) {
             this.itemSlots[i].position.set(this.start.x - 205 + i*(width + this.padding * 3), this.start.y).div(scalar);
+            if (this.itemSlots[i]) {
+                this.itemSlots[i].position.set(this.itemSlots[i].position.x, this.itemSlots[i].position.y);
+            }
         }
         
         // Set the slot numbers in the user interface

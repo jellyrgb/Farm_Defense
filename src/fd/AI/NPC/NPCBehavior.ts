@@ -35,12 +35,12 @@ export default abstract class NPCBehavior extends StateMachineGoapAI<NPCAction> 
     public handleEvent(event: GameEvent): void {
         switch(event.type) {
             case BattlerEvent.BATTLER_ATTACK: {
-                console.log("Catching and handling battler attacking event");
+                console.log("배틀러 공격 이벤트 발생: ", "공격자: ", event.data.get("attacker"), "타겟: ", event.data.get("target"), event.data.get("damage"));
                 this.handleBattlerAttack(event.data.get("attacker"), event.data.get("target"), event.data.get("damage"));
                 break;
             }
             case BattlerEvent.BATTLER_DAMAGED: {
-                console.log("Catching and handling battler damaged event");
+                console.log("배틀러 피격 이벤트 발생: ", "공격자: ", event.data.get("attacker"), "타겟: ", event.data.get("target"), event.data.get("damage"));
                 this.handleBattlerDamaged(event.data.get("attacker"), event.data.get("target"), event.data.get("damage"));
                 break;
             }
@@ -65,7 +65,6 @@ export default abstract class NPCBehavior extends StateMachineGoapAI<NPCAction> 
 
     protected handleBattlerDamaged(attacker: NPCActor, target: NPCActor, damage: number): void {
         if (this.owner === target) {
-            console.log("NPC damaged by target");
             // Subtract the damage from the health of the NPC
             this.owner.health -= damage;
         }
