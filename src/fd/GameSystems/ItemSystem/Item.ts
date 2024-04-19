@@ -16,7 +16,7 @@ import { TargetingEntity } from "../Targeting/TargetingEntity";
 
 export default abstract class Item implements Unique, TargetableEntity {
 
-    protected sprite: Sprite;
+    public sprite: Sprite;
     protected emitter: Emitter;
 
     protected _inventory: Inventory | null;

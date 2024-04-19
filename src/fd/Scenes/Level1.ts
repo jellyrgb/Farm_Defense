@@ -498,7 +498,7 @@ export default class Level1 extends Scene {
         inventory.add(item);
 
         // Remove the turret from the battlers
-        let turret = this.battlers.find(b => b.position.distanceTo(item.position) === 0);
+        let turret = this.battlers.find(b => b.position.distanceTo(item.position) < 10);
         this.battlers = this.battlers.filter(b => b !== turret);
 
         // Consider turret is dead
@@ -526,7 +526,7 @@ export default class Level1 extends Scene {
             setTimeout(() => {
                 message.destroy();
                 nightBackground.color = new Color(0, 0, 0, 0.0);
-            }, 400);
+            }, 600);
 
         }, wordTime);
 

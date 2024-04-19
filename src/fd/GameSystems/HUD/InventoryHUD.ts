@@ -20,9 +20,7 @@ interface HUDOptions {
 }
 
 /**
- * Manages the player inventory that is displayed in the UI. Fun fact, I actually managed to port this
- * class from my old CSE-380 project from last semester.
- * @author PeteyLumpkins
+ * Manages the player inventory that is displayed in the UI.
  */
 export default class InventoryHUD implements Updateable {
 
@@ -103,6 +101,7 @@ export default class InventoryHUD implements Updateable {
             item.visible = true;
             index += 1;
         }
+
     }
 
 }
