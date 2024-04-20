@@ -16,7 +16,7 @@ import { TargetingEntity } from "../Targeting/TargetingEntity";
 
 export default abstract class Item implements Unique, TargetableEntity {
 
-    public sprite: Sprite;
+    protected sprite: Sprite;
     protected emitter: Emitter;
 
     protected _inventory: Inventory | null;
@@ -55,6 +55,16 @@ export default abstract class Item implements Unique, TargetableEntity {
     // Method to change sprite
     public changeSprite(key: string): void {
         this.sprite.imageId = key;
+    }
+
+    //public getter
+    public getSprite(): Sprite {
+        return this.sprite;
+    }
+
+    //change the layer
+    public setSpriteLayer(layer: Layer): void {
+        this.sprite.setLayer(layer);
     }
 
 }

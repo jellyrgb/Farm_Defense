@@ -208,6 +208,7 @@ export default class Level1 extends Scene {
         
         // Create the player
         this.initializePlayer();
+        
         this.initializeItems();
 
         this.initializeNavmesh();
@@ -286,11 +287,14 @@ export default class Level1 extends Scene {
      */
     public override updateScene(deltaT: number): void {
 
+
         while (this.receiver.hasNextEvent()) {
             this.handleEvent(this.receiver.getNextEvent());
         }
 
-        // esc menu 
+
+
+        //esc menu 
         if (Input.isKeyJustPressed("escape")) {       
             this.pause();
             this.togglePauseMenu();
@@ -326,7 +330,7 @@ export default class Level1 extends Scene {
         if (adjusted) {
             player.position = currentPosition;
         }
-        this.inventoryHud.updateItemSlots();
+
         this.inventoryHud.update(deltaT);
         this.healthbars.forEach(healthbar => healthbar.update(deltaT));
     }
@@ -487,6 +491,7 @@ export default class Level1 extends Scene {
     }
 
     protected handleItemPickedUp(event: GameEvent): void {
+        console.log("아이템 픽업 진입");
         let item = event.data.get("item");
         let inventory = event.data.get("inventory");
         let node = event.data.get("node");
@@ -495,13 +500,14 @@ export default class Level1 extends Scene {
         item.visible = true;
         // Put the item back to the inventory
         inventory.add(item);
+        console.log(inventory);
 
 
         let index = inventory.indexOf(item)
-        this.inventoryHud.updateItemPosition(item, index);
+
 
         // Remove the turret from the battlers
-        let turret = this.battlers.find(b => b.position.distanceTo(item.position) < 10);
+        let turret = this.battlers.find(b => b.position.distanceTo(item.position) === 0);
         this.battlers = this.battlers.filter(b => b !== turret);
 
         // Consider turret is dead
@@ -518,7 +524,6 @@ export default class Level1 extends Scene {
             let wordTime = 10;
             
             setTimeout(() => {
-            // Output the screen message in the player's head: "The night has arrived"
             const nightBackground = new Rect(new Vec2(180, 180), new Vec2(170 ,25));
             nightBackground.color = new Color(0, 0, 0, 0.4);
             this.enemyCount.addNode(nightBackground);
@@ -529,7 +534,7 @@ export default class Level1 extends Scene {
             setTimeout(() => {
                 message.destroy();
                 nightBackground.color = new Color(0, 0, 0, 0.0);
-            }, 600);
+            }, 400);
 
         }, wordTime);
 
@@ -581,8 +586,8 @@ export default class Level1 extends Scene {
     /** Initializes the layers in the scene */
     protected initLayers(): void {
         this.addLayer("primary", 10);
-        this.addUILayer("slots");
         this.addUILayer("items");
+        this.addUILayer("slots");
         this.getLayer("slots").setDepth(1);
         this.getLayer("items").setDepth(2);
     }
@@ -599,11 +604,14 @@ export default class Level1 extends Scene {
         player.maxHealth = 10;
 
         player.inventory.onChange = ItemEvent.INVENTORY_CHANGED
+        console.log(this.getLayer("slots").getDepth());
+        console.log(this.getLayer("items").getDepth());
         this.inventoryHud = new InventoryHUD(this, player.inventory, "inventorySlot", {
             start: new Vec2(232, 998),
             slotLayer: "slots",
             padding: 8,
-            itemLayer: "items"
+            itemLayer: "items",
+
         });
 
         // Give the player physics
