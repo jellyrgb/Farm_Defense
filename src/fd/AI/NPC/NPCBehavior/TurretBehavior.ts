@@ -27,7 +27,7 @@ export default class TurretBehavior extends NPCBehavior {
     public initializeAI(owner: NPCActor, options: TurretOptions): void {
         super.initializeAI(owner, options);
 
-        // Initialize the targetable entity the monster should try to attack and the range to the target
+        // Initialize the targetable entity the turret should try to attack and the range to the target
         this.target = options.target
         this.range = options.range;
 

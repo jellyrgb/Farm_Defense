@@ -35,12 +35,10 @@ export default abstract class NPCBehavior extends StateMachineGoapAI<NPCAction> 
     public handleEvent(event: GameEvent): void {
         switch(event.type) {
             case BattlerEvent.BATTLER_ATTACK: {
-                console.log("배틀러 공격 이벤트 발생: ", "공격자: ", event.data.get("attacker"), "타겟: ", event.data.get("target"), event.data.get("damage"));
                 this.handleBattlerAttack(event.data.get("attacker"), event.data.get("target"), event.data.get("damage"));
                 break;
             }
             case BattlerEvent.BATTLER_DAMAGED: {
-                console.log("배틀러 피격 이벤트 발생: ", "공격자: ", event.data.get("attacker"), "타겟: ", event.data.get("target"), event.data.get("damage"));
                 this.handleBattlerDamaged(event.data.get("attacker"), event.data.get("target"), event.data.get("damage"));
                 break;
             }
@@ -53,7 +51,6 @@ export default abstract class NPCBehavior extends StateMachineGoapAI<NPCAction> 
 
     protected handleBattlerAttack(attacker: NPCActor, target: NPCActor, damage: number): void {
         if (this.owner === attacker) {
-            console.log("NPC attacked target");
             // Send a damage event
             this.emitter.fireEvent(BattlerEvent.BATTLER_DAMAGED, {
                 attacker: attacker,
@@ -65,6 +62,8 @@ export default abstract class NPCBehavior extends StateMachineGoapAI<NPCAction> 
 
     protected handleBattlerDamaged(attacker: NPCActor, target: NPCActor, damage: number): void {
         if (this.owner === target) {
+            // Play damgaed animation
+            this.owner.animation.play("DAMAGED", true);
             // Subtract the damage from the health of the NPC
             this.owner.health -= damage;
         }

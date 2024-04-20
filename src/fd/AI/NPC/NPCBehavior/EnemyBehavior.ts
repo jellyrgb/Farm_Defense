@@ -20,7 +20,7 @@ export default class EnemyBehavior extends NPCBehavior {
 
     /** The target the enemy should attack */
     protected target: TargetableEntity;
-    /** The range the guard should be from the target they're guarding to be considered guarding the target */
+    /** The range of the enemy */
     protected range: number;
 
     /** Initialize the NPC AI */

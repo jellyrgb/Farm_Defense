@@ -22,9 +22,7 @@ export default class PickupTargetedItem extends NPCAction {
     public performAction(target: Item): void {
         if (target.inventory === null) {
             this.actor.inventory.add(target);
-            target.getTargeting().forEach( t => target.removeTargeting(t) );
-            //console.log(target.getTargeting());
-            // this prevent all AI's target same
+            target.getTargeting().forEach(t => target.removeTargeting(t));
         }
         this.finished();
     }

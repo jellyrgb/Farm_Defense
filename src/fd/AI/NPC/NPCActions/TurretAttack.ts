@@ -19,21 +19,20 @@ export default class TurretAttack extends NPCAction {
         super(parent, actor);
         this._target = null;
         this.timer = new Timer(2000);
+
     }
 
     public performAction(target: TargetableEntity): void {
         this.timer.isStopped() ? console.log("Turret attack cooling down!") : console.log("Turret attack ready!");
 
-        // If the target turret is near enough and attack is ready, play attacking animation and deal damage
         if (this.timer.isStopped() && this.actor.position.distanceTo(target.position) < 300) {
-            // Play the attacking animation of the monster
             this.actor.animation.play("ATTACKING", false);
 
             // Send a attacked event
             this.emitter.fireEvent(BattlerEvent.BATTLER_ATTACK, {
                 attacker: this.actor,
                 target: target,
-                damage: 50
+                damage: 5
             });
 
             this.timer.start();

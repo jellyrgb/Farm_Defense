@@ -57,7 +57,6 @@ export default class InventoryHUD implements Updateable {
 
     public constructor(scene: Scene, inventory: Inventory, slotSprite: string, options: HUDOptions) {
 
-
         this.scene = scene;
         this.inventory = inventory;
         this.slotSprite = slotSprite;
@@ -66,10 +65,10 @@ export default class InventoryHUD implements Updateable {
         this.size = this.inventory.capacity;
         this.padding = options.padding;
         this.start = options.start;
+
         // Init the layers for the items
         this.slotLayer = options.slotLayer;
         this.itemLayer = options.itemLayer;
-        
 
         // Set up the scales for scaling to the viewport
         let scale = scene.getViewScale();
@@ -107,17 +106,13 @@ export default class InventoryHUD implements Updateable {
 
             this.itemSlotNums[i] = <Label>this.scene.add.uiElement(UIElementType.LABEL, this.slotLayer, {position: new Vec2(this.start.x - 205 + i*(width + this.padding * 4.8),
                  this.start.y + height/2 + 8).div(scalar), text: `${i + 1}`});
-            this.itemSlotNums[i].fontSize = 13;
+            this.itemSlotNums[i].fontSize = 16;
             this.itemSlotNums[i].font = "pixel";
-            this.itemSlotNums[i].textColor = Color.BLACK;
+            this.itemSlotNums[i].textColor = Color.WHITE;
         }
-
-
 
     }
 
- 
-    
     public update(deltaT: number): void {
         const viewport = this.scene.getViewport();
         const baseX = viewport.getOrigin().x + 10;  // 화면 왼쪽 여백
@@ -144,7 +139,6 @@ export default class InventoryHUD implements Updateable {
             this.itemSlots[index].position.set(1000, 1000);
             
             index++;
-
         }
     }
 

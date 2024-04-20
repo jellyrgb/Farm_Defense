@@ -56,20 +56,20 @@ export default abstract class NPCAction extends GoapAction {
     }
 
     public update(deltaT: number): void {
-        if( this.path && !this.path.isDone()){
-            //if there is a path, move on
+        if (this.path && !this.path.isDone()) {
+            // If there is a path, move on
             this.actor.moveOnPath(1, this.path);
 
-            // bring target's targeting list
+            // Bring target's targeting list
             const distancex = Math.abs(this._target.position.x - this.actor.position.x);
             const distancey = Math.abs(this._target.position.y - this.actor.position.y);
 
             if (distancex + distancey < 14) {
-                //accept the little difference
+                // Accept the little difference
                 const targetingEntities = this._target.getTargeting();
                 const first = targetingEntities.pop();
                 
-                if(first == null || first.id != this.actor.id){
+                if (first == null || first.id != this.actor.id) {
                     this.actor.clearTarget();
                     this.target = null;
                     this.path = null;
@@ -82,7 +82,7 @@ export default abstract class NPCAction extends GoapAction {
                         this.path = this.actor.getPath(this.actor.position, this.target.position);
                     }
                 }
-                else{
+                else {
                 // bring target's targeting list
                 this.performAction(this._target);
                 }
