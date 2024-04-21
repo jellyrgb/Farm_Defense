@@ -560,11 +560,10 @@ export default class Level1 extends Scene {
 
     protected growTurretA(event: GameEvent): void {
         let item = event.data.get("item");
-        // Change the sprite to tomato
-        item.changeSprite("tomato_sprite");
         
         // Change the item into Turret object, and add it to the battlers
         let turret = this.add.animatedSprite(NPCActor, "turretA", "primary");
+        this.turret = turret;
    
         turret.animation.play("GROW_UP", false, ItemEvent.FINISH_GROW_UP);
         console.log("성장 모션");
@@ -583,36 +582,22 @@ export default class Level1 extends Scene {
         let healthbar = new HealthbarHUD(this, turret, "primary", {size: turret.size.clone().scaled(2, 1/2), offset: turret.size.clone().scaled(0, -1/2)});
         this.healthbars.set(turret.id, healthbar);
 
-        // Make the seed invisible
-        item.visible = false;
-
         setTimeout(() => {
             turret.addAI(TurretBehavior, {target: this.battlers[0], range: 1000});
             this.battlers.push(turret);
             this.turret = turret;
         }, 4000);
+
+        item.destroy();
     }
 
     protected handleItemPickedUp(event: GameEvent): void {
-        console.log("아이템 픽업 진입");
         let item = event.data.get("item");
         let inventory = event.data.get("inventory");
         let node = event.data.get("node");
-
-        // Make the item visible
-        item.visible = true;
-        // Put the item back to the inventory
+        
         inventory.add(item);
         console.log(inventory);
-
-        let index = inventory.indexOf(item)
-
-        // Remove the turret from the battlers
-        let turret = this.battlers.find(b => b.position.distanceTo(item.position) === 0);
-        this.battlers = this.battlers.filter(b => b !== turret);
-
-        // Consider turret is dead
-        this.emitter.fireEvent(BattlerEvent.BATTLER_KILLED, {id: turret.id});
     }
 
     protected handleItemDropped(event: GameEvent): void {
@@ -767,7 +752,18 @@ export default class Level1 extends Scene {
         let waveTime = 10000;
 
         setTimeout(() => {
-            
+            // Output the screen message in the player's head: "The night has arrived"
+            const nightBackground = new Rect(new Vec2(0, 0), new Vec2(1000, 1000));
+            nightBackground.color = new Color(0, 0, 0, 0.8);
+            this.enemyCount.addNode(nightBackground);
+            let message = this.add.uiElement(UIElementType.LABEL, "enemyCount", {position: new Vec2(180, 180), text: "The night has arrived"});
+            (message as Label).setTextColor(Color.WHITE);
+            (message as Label).fontSize = 30;
+            setTimeout(() => {
+                message.destroy();
+                nightBackground.color = new Color(0, 0, 0, 0.2);
+            }, 3000);
+            this.initializeMonsters();
         }, waveTime);
 
         
