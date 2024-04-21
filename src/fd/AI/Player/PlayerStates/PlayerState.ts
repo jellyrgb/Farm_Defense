@@ -60,7 +60,7 @@ export default abstract class PlayerState extends State {
         if (this.parent.controller.dropping) {
             const now = Date.now();
             const item = this.owner.inventory.find(item => item instanceof Item) as Item | null;
-            const cooldownPeriod = 10000;
+            const cooldownPeriod = 4000;
             const lastDrop = this.owner.lastItemDropped;
             const timeSinceLastDrop = now - lastDrop;
 

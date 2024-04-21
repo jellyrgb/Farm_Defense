@@ -46,6 +46,7 @@ import Level3 from "../Scenes/Level3";
 import Level4 from "../Scenes/Level4";
 import Level5 from "../Scenes/Level5";
 import Level6 from "../Scenes/Level6"; 
+import GameOver from "./GameOver";
 
 const BattlerGroups = {
     TURRET: 1,
@@ -86,6 +87,12 @@ export default class Level1 extends Scene {
     private floors: OrthogonalTilemap;
 
     private timer : Layer;
+
+    private night: boolean;
+
+    private levelEnded: boolean;
+
+    private baseId: number;
     
     // List of turrets waiting to be spawned
     private turretWaiting: Array<NPCActor>;
@@ -140,6 +147,10 @@ export default class Level1 extends Scene {
      */
     public override startScene() {
         const center = this.viewport.getCenter();
+
+        this.night = false;
+        this.levelEnded = false;
+        this.blueEnemyCount = 10;
 
         // pause menu initialize
         this.pauseMenu = this.addUILayer("pauseMenu");
@@ -237,16 +248,19 @@ export default class Level1 extends Scene {
         (timerLabel as Label).setTextColor(Color.WHITE);
         (timerLabel as Label).fontSize = 24;
     
-        let duration = 120;
+        let dayDuration = 60;
         let interval = setInterval(() => {
-            let minutes = Math.floor(duration / 60);
-            let seconds = duration % 60;
-        
+            let minutes = Math.floor(dayDuration / 60);
+            let seconds = dayDuration % 60;
+
+            // Pad the seconds with leading zeros
+            let secondsString = String(seconds).padStart(2, '0');
+
             if (timerLabel) {
-                (timerLabel as Label).setText(`${minutes}:${seconds}`);
+                (timerLabel as Label).setText(`${minutes}:${secondsString}`);
             }
         
-            if (duration <= 0) {
+            if (dayDuration <= 0) {
                 clearInterval(interval);
                 if (timerLabel) {
                     (timerLabel as Label).setText(" ");
@@ -257,8 +271,9 @@ export default class Level1 extends Scene {
                         }
                     }, 1000);
                 }
+                this.night = true;
             }
-            duration -= 1;
+            dayDuration -= 1;
         }, 1000)
 
 
@@ -297,8 +312,6 @@ export default class Level1 extends Scene {
             }
         }
 
-        this.blueEnemyCount = this.calculateBlueEnemies();
-
         const enemyCountLabel = this.add.uiElement(UIElementType.LABEL, "enemyCount", {position: new Vec2(324, 10),
             text: "x " + this.blueEnemyCount
         });
@@ -318,6 +331,22 @@ export default class Level1 extends Scene {
 
         this.inventoryHud.update(deltaT);
         this.healthbars.forEach(healthbar => healthbar.update(deltaT));
+
+        if (this.blueEnemyCount === 0 && this.night) {
+            // Output the screen message: You have survived the night!
+            const nightBackground = new Rect(new Vec2(0, 0), new Vec2(1000, 1000));
+            nightBackground.color = new Color(0, 0, 0, 0.8);
+            this.enemyCount.addNode(nightBackground);
+
+            let message = this.add.uiElement(UIElementType.LABEL, "enemyCount", {position: new Vec2(180, 180), text: "You have survived the night!"});
+            (message as Label).setTextColor(Color.WHITE);
+            (message as Label).fontSize = 30;
+
+            // Proceed to the next level after 3 seconds
+            setTimeout(() => {
+                this.sceneManager.changeToScene(Level2);
+            }, 3000);
+        }
     }
 
     private preventEscape(): void {
@@ -561,7 +590,7 @@ export default class Level1 extends Scene {
             turret.addAI(TurretBehavior, {target: this.battlers[0], range: 1000});
             this.battlers.push(turret);
             this.turret = turret;
-        }, 1000);
+        }, 4000);
     }
 
     protected handleItemPickedUp(event: GameEvent): void {
@@ -642,6 +671,15 @@ export default class Level1 extends Scene {
         let id: number = event.data.get("id");
         let battler = this.battlers.find(b => b.id === id);
 
+        if (battler.battleGroup === 2) {
+            this.blueEnemyCount -= 1;
+        }
+
+        if (battler.id === this.baseId) {
+            // Change scene to gameover
+            this.sceneManager.changeToScene(GameOver);
+        }
+
         if (battler) {
             battler.battlerActive = false;
             this.healthbars.get(id).visible = false;
@@ -712,6 +750,8 @@ export default class Level1 extends Scene {
             let healthbar = new HealthbarHUD(this, baseNPC, "primary", {size: baseNPC.size.clone().scaled(2, 1/2), offset: baseNPC.size.clone().scaled(0, -1/2)});
             this.healthbars.set(baseNPC.id, healthbar);
 
+            this.baseId = baseNPC.id;
+
             baseNPC.type = "base";
             baseNPC.battleGroup = 1;
             baseNPC.speed = 0;
@@ -727,20 +767,7 @@ export default class Level1 extends Scene {
         let waveTime = 10000;
 
         setTimeout(() => {
-            // Output the screen message in the player's head: "The night has arrived"
-            const nightBackground = new Rect(new Vec2(0, 0), new Vec2(1000, 1000));
-            nightBackground.color = new Color(0, 0, 0, 0.8);
-            this.enemyCount.addNode(nightBackground);
-
-            let message = this.add.uiElement(UIElementType.LABEL, "enemyCount", {position: new Vec2(180, 180), text: "The night has arrived"});
-            (message as Label).setTextColor(Color.WHITE);
-            (message as Label).fontSize = 30;
-            setTimeout(() => {
-                message.destroy();
-                nightBackground.color = new Color(0, 0, 0, 0.2);
-            }, 3000);
-
-            this.initializeMonsters();
+            
         }, waveTime);
 
         
