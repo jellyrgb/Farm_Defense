@@ -19,7 +19,7 @@ import NPCActor from "../Actors/NPCActor";
 import PlayerActor from "../Actors/PlayerActor";
 import PlayerAI from "../AI/Player/PlayerAI";
 import EnemyBehavior from "../AI/NPC/NPCBehavior/EnemyBehavior";
-import { ItemEvent, PlayerEvent, BattlerEvent } from "../Events";
+import { ItemEvent, PlayerEvent, BattlerEvent, CooldownEvent } from "../Events";
 import Battler from "../GameSystems/BattleSystem/Battler";
 import BattlerBase from "../GameSystems/BattleSystem/BattlerBase";
 import HealthbarHUD from "../GameSystems/HUD/HealthbarHUD";
@@ -41,6 +41,11 @@ import Rect from "../../Wolfie2D/Nodes/Graphics/Rect";
 import TextInput from "../../Wolfie2D/Nodes/UIElements/TextInput";
 import TurretBehavior from "../AI/NPC/NPCBehavior/TurretBehavior";
 import BaseBehavior from "../AI/NPC/NPCBehavior/BaseBehavior";
+import Level2 from "../Scenes/Level2";
+import Level3 from "../Scenes/Level3";
+import Level4 from "../Scenes/Level4";
+import Level5 from "../Scenes/Level5";
+import Level6 from "../Scenes/Level6"; 
 
 const BattlerGroups = {
     TURRET: 1,
@@ -187,6 +192,7 @@ export default class Level1 extends Scene {
         this.receiver.subscribe("cheat");
         this.receiver.subscribe("submitCheat");
         this.receiver.subscribe("growFinish");
+        this.receiver.subscribe(CooldownEvent.COOLDOWN_MESSAGE);
 
 
         // Add in the tilemap
@@ -279,8 +285,6 @@ export default class Level1 extends Scene {
         while (this.receiver.hasNextEvent()) {
             this.handleEvent(this.receiver.getNextEvent());
         }
-
-        this.emitter.fireEvent(ItemEvent.FINISH_GROW_UP, {});
 
         for (let i = 0; i < this.battlers.length; i++) {
             for (let j = i + 1; j < this.battlers.length; j++) {
@@ -388,7 +392,37 @@ export default class Level1 extends Scene {
     }
     
     public handleCheatSubmission(cheatCode: string): void {
-        console.log("Cheat code processed:", cheatCode);
+        let player = this.battlers.find(b => b instanceof PlayerActor) as PlayerActor;
+        console.log("치트코드 진행 : ", cheatCode);
+        if(cheatCode == "2"){
+            this.sceneManager.changeToScene(Level2);
+        }
+        if(cheatCode == "3"){
+            this.sceneManager.changeToScene(Level3);
+        }
+        if(cheatCode == "4"){
+            this.sceneManager.changeToScene(Level4);
+        }
+        if(cheatCode == "5"){
+            this.sceneManager.changeToScene(Level5);
+        }
+        if(cheatCode == "6") {
+            this.sceneManager.changeToScene(Level6);
+        }
+        if(cheatCode == "IMNOTHURT"){
+            player.maxHealth = 100000;
+            player.health = 100000;
+            console.log("플레이어 최대체력 , 현재 체력 : ", player.maxHealth , player.health);
+        }
+        if(cheatCode == "INVISIBLE"){
+            player.visible = false;
+            console.log("플레이어 안보임")
+        }
+        if(cheatCode == "VISIBLE"){
+            player.visible = true;
+            console.log("플레이어 보임 ");
+        }
+
     }
 
     /**
@@ -426,22 +460,9 @@ export default class Level1 extends Scene {
             }
 
             case ItemEvent.FINISH_GROW_UP: {
-                console.log("Finish growing up Event received");
-                if (this.turretWaiting.length === 0) {
-                    break;
-                }
-
-                // Get the first element of the turretWaiting list and remove it from the list
-                let first = this.turretWaiting.shift();
-
-                console.log(first.animation.isPlaying("GROW_UP"));
-
-                if (!first.animation.isPlaying("GROW_UP")) {
-                    console.log("Finished growing up");
-                    first.addAI(TurretBehavior, {target: this.battlers[0], range: 1000});
-                    this.battlers.push(first);
-                    this.turret = first;
-                    first.animation.play("IDLE", true);
+                if (this.turret) {
+                    console.log("성장 끝, 보통 모션 출력");
+                    this.turret.animation.play("IDLE", true);
                 }
                 break;
             }
@@ -452,6 +473,12 @@ export default class Level1 extends Scene {
                 break;
             }
             case BattlerEvent.BATTLER_RESPAWN: {
+                break;
+            }
+
+            case CooldownEvent.COOLDOWN_MESSAGE: {
+                const remainingTime = event.data.get("remainingTime");  // 값을 가져올 때 get 메서드 사용
+                this.showCooldownMessage(remainingTime);
                 break;
             }
         
@@ -510,15 +537,17 @@ export default class Level1 extends Scene {
         // Change the item into Turret object, and add it to the battlers
         let turret = this.add.animatedSprite(NPCActor, "turretA", "primary");
    
-        turret.animation.play("GROW_UP", false);
+        turret.animation.play("GROW_UP", false, ItemEvent.FINISH_GROW_UP);
+        console.log("성장 모션");
+
         turret.position.set(item.position.x, item.position.y);
         turret.addPhysics(new AABB(Vec2.ZERO, new Vec2(7, 7)), null, false);
         
         turret.battleGroup = 1;
         turret.type = "turret";
         turret.speed = 0;
-        turret.health = 10;
-        turret.maxHealth = 10;
+        turret.health = 100;
+        turret.maxHealth = 100;
         turret.navkey = "navmesh";
 
         // Give the NPCS their healthbars
@@ -528,8 +557,11 @@ export default class Level1 extends Scene {
         // Make the seed invisible
         item.visible = false;
 
-        // Add the turret to the turretWaiting list
-        this.turretWaiting.push(turret);
+        setTimeout(() => {
+            turret.addAI(TurretBehavior, {target: this.battlers[0], range: 1000});
+            this.battlers.push(turret);
+            this.turret = turret;
+        }, 1000);
     }
 
     protected handleItemPickedUp(event: GameEvent): void {
@@ -556,32 +588,6 @@ export default class Level1 extends Scene {
 
     protected handleItemDropped(event: GameEvent): void {
         let item = event.data.get("item");
-        let now = Date.now();
-
-        if (item.lastDropped && (now - item.lastDropped < 10000)) {
-            let remainingTime = (10000 - (now - item.lastDropped)) / 1000; // calculate in second
-
-            let wordTime = 10;
-            
-            setTimeout(() => {
-            const nightBackground = new Rect(new Vec2(180, 180), new Vec2(170 ,25));
-            nightBackground.color = new Color(0, 0, 0, 0.4);
-            this.enemyCount.addNode(nightBackground);
-
-            let message = this.add.uiElement(UIElementType.LABEL, "enemyCount", {position: new Vec2(180, 180), text: "Need "+ remainingTime +" seconds to planting"});
-            (message as Label).setTextColor(Color.WHITE);
-            (message as Label).fontSize = 24;
-            setTimeout(() => {
-                message.destroy();
-                nightBackground.color = new Color(0, 0, 0, 0.0);
-            }, 400);
-
-        }, wordTime);
-
-            return;
-        }
-
-        item.lastDropped = now;
                 
         // Get the col and row of the tile that the item is dropped
         let col = item.position.x;
@@ -606,6 +612,26 @@ export default class Level1 extends Scene {
                 this.emitter.fireEvent(ItemEvent.ITEM_GROW_UP, {item: item});
             }
         }
+    }
+
+    protected showCooldownMessage(remainingTime: string): void {
+        const uiLayer = this.getLayer("enemyCount");
+
+        const background = new Rect(new Vec2(180, 180), new Vec2(170, 25));
+        background.color = new Color(0, 0, 0, 0.4);
+        uiLayer.addNode(background);
+
+        const message = this.add.uiElement(UIElementType.LABEL, "enemyCount", {
+            position: new Vec2(180, 180),
+            text: `Need ${remainingTime} seconds to planting`
+        });
+        (message as Label).setTextColor(Color.WHITE);
+        (message as Label).fontSize = 24;
+
+        setTimeout(() => {
+            message.destroy();
+            background.color = new Color(0,0,0,0);
+        }, 1000);
     }
 
     /**
@@ -698,7 +724,7 @@ export default class Level1 extends Scene {
             this.battlers.push(baseNPC);
         }
 
-        let waveTime = 90000;
+        let waveTime = 10000;
 
         setTimeout(() => {
             // Output the screen message in the player's head: "The night has arrived"

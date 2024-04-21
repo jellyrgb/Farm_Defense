@@ -32,7 +32,7 @@ export default class TurretAttack extends NPCAction {
             this.emitter.fireEvent(BattlerEvent.BATTLER_ATTACK, {
                 attacker: this.actor,
                 target: target,
-                damage: 5
+                damage: 10
             });
 
             this.timer.start();
@@ -55,6 +55,7 @@ export default class TurretAttack extends NPCAction {
     }
 
     public update(deltaT: number): void {
+        super.onEnter({});
         super.update(deltaT);
     }
 

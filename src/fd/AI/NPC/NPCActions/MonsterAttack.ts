@@ -55,6 +55,7 @@ export default class MonsterAttack extends NPCAction {
     }
 
     public update(deltaT: number): void {
+        super.onEnter({});
         super.update(deltaT);
     }
 

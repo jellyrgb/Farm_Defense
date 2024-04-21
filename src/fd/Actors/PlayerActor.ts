@@ -22,6 +22,7 @@ export default class PlayerActor extends AnimatedSprite implements Battler {
 
     protected heldItem: Item;
 
+    public lastItemDropped: number = 0;
     constructor(sheet: Spritesheet) {
         super(sheet);
         this.battler = new BasicBattler(this);
@@ -35,7 +36,7 @@ export default class PlayerActor extends AnimatedSprite implements Battler {
         this.battler.battlerActive = value;
         this.visible = value;
     }
-    
+
     public getTargeting(): TargetingEntity[] { return this.targetable.getTargeting(); }
     public addTargeting(targeting: TargetingEntity): void { this.targetable.addTargeting(targeting); }
     public removeTargeting(targeting: TargetingEntity): void { this.targetable.removeTargeting(targeting); }

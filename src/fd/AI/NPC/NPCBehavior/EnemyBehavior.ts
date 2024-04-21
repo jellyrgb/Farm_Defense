@@ -62,6 +62,7 @@ export default class EnemyBehavior extends NPCBehavior {
             });
         }
 
+
         super.update(deltaT);
     }
 
@@ -89,13 +90,14 @@ export default class EnemyBehavior extends NPCBehavior {
         attackTurret.cost = 1;
         this.addState(EnemyActions.ATTACK, attackTurret);
 
-        // An action for guarding the guard's guard location
+        // An action for just idling
         let idle = new Idle(this, this.owner);
         idle.targets = [this.target];
         idle.targetFinder = new BasicFinder();
         idle.addEffect(EnemyStatuses.GOAL);
         idle.cost = 1000;
         this.addState(EnemyActions.IDLE, idle);
+
     }
 
     public override addState(stateName: EnemyAction, state: GoapAction): void {

@@ -22,6 +22,10 @@ export enum ItemEvent {
     INVENTORY_CHANGED = "INVENTORY_CHANGED",
 }
 
+export const CooldownEvent = {
+    COOLDOWN_MESSAGE: "cooldownMessage"
+};
+
 export enum HudEvent {
     HEALTH_CHANGE = "HEALTH_CHANGE"
 }
