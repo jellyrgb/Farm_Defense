@@ -93,6 +93,8 @@ export default class Level1 extends Scene {
     private levelEnded: boolean;
 
     private baseId: number;
+
+    private enemyCountLabel: Label;
     
     // List of turrets waiting to be spawned
     private turretWaiting: Array<NPCActor>;
@@ -122,6 +124,7 @@ export default class Level1 extends Scene {
         this.load.spritesheet("monsterB", "fd_assets/spritesheets/monsterB.json");
         this.load.spritesheet("monsterC", "fd_assets/spritesheets/monsterC.json");
         this.load.spritesheet("turretA", "fd_assets/spritesheets/turretA.json");
+        this.load.spritesheet("turretB", "fd_assets/spritesheets/turretB.json");
         this.load.image("monsterBLogo", "fd_assets/sprites/logoB.png")
 
         // Load the tilemap
@@ -138,7 +141,6 @@ export default class Level1 extends Scene {
         // Load the image sprites
         this.load.image("seed", "fd_assets/sprites/seed.png");
         this.load.image("inventorySlot", "fd_assets/sprites/inventory.png");
-        this.load.image("tomato_sprite", "fd_assets/sprites/tomato_sprite.png");
         this.load.image("timer", "fd_assets/sprites/moon.png");
     }
 
@@ -150,7 +152,9 @@ export default class Level1 extends Scene {
 
         this.night = false;
         this.levelEnded = false;
-        this.blueEnemyCount = 10;
+        let enemy = this.load.getObject("enemy_location");
+        this.blueEnemyCount = enemy.enemies.length;
+
 
         // pause menu initialize
         this.pauseMenu = this.addUILayer("pauseMenu");
@@ -238,6 +242,13 @@ export default class Level1 extends Scene {
         const monsterPhoto = this.add.sprite("monsterBLogo", "enemyCount");
         monsterPhoto.position.set(300, 10);
 
+        this.enemyCountLabel = <Label>this.add.uiElement(UIElementType.LABEL, "enemyCount", {
+            position: new Vec2(324, 10),
+            text: "x " + this.blueEnemyCount
+        });
+        this.enemyCountLabel.setTextColor(Color.WHITE);
+        this.enemyCountLabel.fontSize = 24;
+
         this.timer = this.addUILayer("timer");
         this.timer.setHidden(false);
 
@@ -301,6 +312,7 @@ export default class Level1 extends Scene {
             this.handleEvent(this.receiver.getNextEvent());
         }
 
+
         for (let i = 0; i < this.battlers.length; i++) {
             for (let j = i + 1; j < this.battlers.length; j++) {
                 // If they are same type of battlers and they are colliding
@@ -312,12 +324,7 @@ export default class Level1 extends Scene {
             }
         }
 
-        const enemyCountLabel = this.add.uiElement(UIElementType.LABEL, "enemyCount", {position: new Vec2(324, 10),
-            text: "x " + this.blueEnemyCount
-        });
-        (enemyCountLabel as Label).setTextColor(Color.WHITE);
-        (enemyCountLabel as Label).fontSize = 24;
-
+        this.updateEnemyCountLabel();
         // Esc menu 
         if (Input.isKeyJustPressed("escape")) {       
             this.pause();
@@ -348,7 +355,11 @@ export default class Level1 extends Scene {
             }, 3000);
         }
     }
-
+    private updateEnemyCountLabel() {
+        if (this.enemyCountLabel) {
+            this.enemyCountLabel.setText("x " + this.blueEnemyCount);
+        }
+    }
     private preventEscape(): void {
         // Prevent player escape from map
         let player = this.battlers.find(b => b instanceof PlayerActor) as PlayerActor;
@@ -552,7 +563,7 @@ export default class Level1 extends Scene {
         if (item.star === 1) {
             this.growTurretA(event);
         } else if (item.star === 2) {
-            this.growTurretA(event);
+            this.growTurretB(event);
         } else if (item.star === 3) {
             this.growTurretA(event);
         }
@@ -588,7 +599,40 @@ export default class Level1 extends Scene {
             this.turret = turret;
         }, 4000);
 
-        item.destroy();
+        // item.destroy();
+    }
+
+    protected growTurretB(event: GameEvent): void {
+        let item = event.data.get("item");
+        
+        // Change the item into Turret object, and add it to the battlers
+        let turret = this.add.animatedSprite(NPCActor, "turretB", "primary");
+        this.turret = turret;
+   
+        turret.animation.play("GROW_UP", false, ItemEvent.FINISH_GROW_UP);
+        console.log("성장 모션");
+
+        turret.position.set(item.position.x, item.position.y);
+        turret.addPhysics(new AABB(Vec2.ZERO, new Vec2(7, 7)), null, false);
+        
+        turret.battleGroup = 1;
+        turret.type = "turret";
+        turret.speed = 0;
+        turret.health = 100;
+        turret.maxHealth = 100;
+        turret.navkey = "navmesh";
+
+        // Give the NPCS their healthbars
+        let healthbar = new HealthbarHUD(this, turret, "primary", {size: turret.size.clone().scaled(2, 1/2), offset: turret.size.clone().scaled(0, -1/2)});
+        this.healthbars.set(turret.id, healthbar);
+
+        setTimeout(() => {
+            turret.addAI(TurretBehavior, {target: this.battlers[0], range: 1000});
+            this.battlers.push(turret);
+            this.turret = turret;
+        }, 4000);
+
+        //item.destroy();
     }
 
     protected handleItemPickedUp(event: GameEvent): void {
@@ -771,7 +815,6 @@ export default class Level1 extends Scene {
 
     protected initializeMonsters(): void {
         let enemy = this.load.getObject("enemy_location");
-
         // Initialize the blue enemies
         for (let i = 0; i < enemy.enemies.length; i++) {
             let npc = this.add.animatedSprite(NPCActor, "monsterB", "primary");
