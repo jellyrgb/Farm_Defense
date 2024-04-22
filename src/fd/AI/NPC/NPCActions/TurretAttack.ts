@@ -14,12 +14,60 @@ import { BattlerEvent } from "../../../Events";
 export default class TurretAttack extends NPCAction {
 
     protected timer: Timer;
+    protected atk: number;
+    protected cooldown: number;
     
-    public constructor(parent: NPCBehavior, actor: NPCActor) {
+    public constructor(parent: NPCBehavior, actor: NPCActor, type: string, star: string) {
         super(parent, actor);
         this._target = null;
-        this.timer = new Timer(2000);
+        
+        if (type == "tomato") {
+            if (star == "normal") {
+                this.atk = 10;
+                this.cooldown = 2000;
+            } else if (star == "silver") {
+                this.atk = 12;
+                this.cooldown = 1950;
+            } else if (star == "gold") {
+                this.atk = 14;
+                this.cooldown = 1900;
+            }
+        } else if (type == "watermelon") {
+            if (star == "normal") {
+                this.atk = 15;
+                this.cooldown = 2000;
+            } else if (star == "silver") {
+                this.atk = 18;
+                this.cooldown = 1950;
+            } else if (star == "gold") {
+                this.atk = 21;
+                this.cooldown = 1900;
+            }
+        } else if (type == "peach") {
+            if (star == "normal") {
+                this.atk = 23;
+                this.cooldown = 1900;
+            } else if (star == "silver") {
+                this.atk = 27;
+                this.cooldown = 1800;
+            } else if (star == "gold") {
+                this.atk = 31;
+                this.cooldown = 1700;
+            }
+        } else if (type == "lemon") {
+            if (star == "normal") {
+                this.atk = 25;
+                this.cooldown = 1500;
+            } else if (star == "silver") {
+                this.atk = 25;
+                this.cooldown = 1200;
+            } else if (star == "gold") {
+                this.atk = 25;
+                this.cooldown = 900;
+            }
+        }
 
+        this.timer = new Timer(this.cooldown);
     }
 
     public performAction(target: TargetableEntity): void {
@@ -28,20 +76,21 @@ export default class TurretAttack extends NPCAction {
         if (this.timer.isStopped() && this.actor.position.distanceTo(target.position) < 300) {
             this.actor.animation.play("ATTACKING", false);
 
-
             // Send a attacked event
             this.emitter.fireEvent(BattlerEvent.BATTLER_ATTACK, {
                 attacker: this.actor,
                 target: target,
-                damage: 50
+                damage: this.atk
             });
 
             this.timer.start();
         }
+
         setTimeout(() => {
             console.log("IDLE 실행");
             this.actor.animation.play("IDLE");
         }, 1000);
+
         // Finish the action
         this.finished();
     }

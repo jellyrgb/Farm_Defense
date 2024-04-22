@@ -22,6 +22,8 @@ export default class TurretBehavior extends NPCBehavior {
     protected target: TargetableEntity;
     /** The range the guard should be from the target they're guarding to be considered guarding the target */
     protected range: number;
+    protected type: string;
+    protected star: string;
 
     /** Initialize the NPC AI */
     public initializeAI(owner: NPCActor, options: TurretOptions): void {
@@ -30,6 +32,8 @@ export default class TurretBehavior extends NPCBehavior {
         // Initialize the targetable entity the turret should try to attack and the range to the target
         this.target = options.target
         this.range = options.range;
+        this.type = options.type;
+        this.star = options.star;
 
         // Initialize statuses
         this.initializeStatuses();
@@ -71,13 +75,13 @@ export default class TurretBehavior extends NPCBehavior {
         let scene = this.owner.getScene();
 
         // An action for attacking enemy in the scene
-        let attackMonster = new TurretAttack(this, this.owner);
-        attackMonster.targets = scene.getBattlers();
-        attackMonster.targetFinder = new BasicFinder<Battler>(ClosestPositioned(this.owner), BattlerActiveFilter(), EnemyFilter(this.owner), RangeFilter(this.target, 0, this.range*this.range));
-        attackMonster.addPrecondition(TurretStatuses.TARGETABLE_ENEMY_EXISTS);
-        attackMonster.addEffect(TurretStatuses.GOAL);
-        attackMonster.cost = 1;
-        this.addState(TurretActions.ATTACK, attackMonster);
+        let attack = new TurretAttack(this, this.owner, this.type, this.star);
+        attack.targets = scene.getBattlers();
+        attack.targetFinder = new BasicFinder<Battler>(ClosestPositioned(this.owner), BattlerActiveFilter(), EnemyFilter(this.owner), RangeFilter(this.target, 0, this.range*this.range));
+        attack.addPrecondition(TurretStatuses.TARGETABLE_ENEMY_EXISTS);
+        attack.addEffect(TurretStatuses.GOAL);
+        attack.cost = 1;
+        this.addState(TurretActions.ATTACK, attack);
 
         // An action for guarding the location that the turret is currently at
         let idle = new Idle(this, this.owner);
@@ -100,6 +104,8 @@ export default class TurretBehavior extends NPCBehavior {
 export interface TurretOptions {
     target: TargetableEntity
     range: number;
+    type: string;
+    star: string;
 }
 
 export type TurretStatus = typeof TurretStatuses[keyof typeof TurretStatuses];

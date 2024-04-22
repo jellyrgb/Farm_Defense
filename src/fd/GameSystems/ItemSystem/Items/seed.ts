@@ -9,15 +9,42 @@ export default class Seed extends Item {
 
     public constructor(sprite: Sprite) {
         super(sprite);
-        // Choose it's star value randomly from 1-3
-        // 1 has chance of 65%, 2 has chance of 25%, 3 has chance of 10%
+
         let rand = Math.random();
-        if (rand < 0.65) {
-            this.st = 1;
+        console.log(rand.toFixed(2));
+
+        if (rand < 0.4) {
+            if (rand < 0.2) {
+                this.st = 1;
+            } else if (rand < 0.32) {
+                this.st = 2;
+            } else {
+                this.st = 3;
+            }
+        } else if (rand < 0.7) {
+            if (rand < 0.55) {
+                this.st = 4;
+            } else if (rand < 0.64) {
+                this.st = 5;
+            } else {
+                this.st = 6;
+            }
         } else if (rand < 0.9) {
-            this.st = 2;
+            if (rand < 0.8) {
+                this.st = 7;
+            } else if (rand < 0.86) {
+                this.st = 8;
+            } else {
+                this.st = 9;
+            }
         } else {
-            this.st = 3;
+            if (rand < 0.95) {
+                this.st = 10;
+            } else if (rand < 0.98) {
+                this.st = 11;
+            } else {    
+                this.st = 12;
+            }
         }
     }
 

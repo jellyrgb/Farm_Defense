@@ -19,6 +19,16 @@
                     "duration": 10
                 }
             ]
+        },
+        {
+            "name": "DAMAGED",
+            "repeat": true,
+            "frames": [
+                {
+                    "index": 0,
+                    "duration": 10
+                }
+            ]
         }
     ]
 }

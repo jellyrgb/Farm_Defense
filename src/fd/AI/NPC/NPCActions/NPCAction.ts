@@ -57,37 +57,35 @@ export default abstract class NPCAction extends GoapAction {
 
     public update(deltaT: number): void {
         if (this.path && !this.path.isDone()) {
-            // If there is a path, move on
             this.actor.moveOnPath(1, this.path);
-
-            // Bring target's targeting list
-            const distancex = Math.abs(this._target.position.x - this.actor.position.x);
-            const distancey = Math.abs(this._target.position.y - this.actor.position.y);
-
-            if (distancex + distancey < 14) {
-                // Accept the little difference
-                const targetingEntities = this._target.getTargeting();
-                const first = targetingEntities.pop();
-                
-                if (first == null || first.id != this.actor.id) {
-                    this.actor.clearTarget();
-                    this.target = null;
-                    this.path = null;
-
-                    this.target = this.targetFinder.find(this.targets);
-                    if (this.target !== null) {
-                        // Set the actors current target to be the target for this action
-                        this.actor.setTarget(this.target);
-                        // Construct a path from the actor to the target
-                        this.path = this.actor.getPath(this.actor.position, this.target.position);
-                    }
-                }
-                else {
-                // bring target's targeting list
+    
+            const distanceToTarget = this.actor.position.distanceTo(this._target.position);
+    
+            if (distanceToTarget < 14) {
                 this.performAction(this._target);
-                }
+                // 타겟에 도달했다면, 새로운 타겟을 검색
+                this.findNewTarget();
             }
-        
+        } else {
+            // 경로가 완료되었거나 경로가 없는 경우, 새로운 타겟 검색
+            this.findNewTarget();
+        }
+    }
+
+    private findNewTarget(): void {
+
+        // 새로운 타겟을 찾음
+        this.target = this.targetFinder.find(this.targets);
+    
+        if (this.target) {
+            // 새로운 타겟을 설정하고 경로를 재설정
+            this.actor.setTarget(this.target);
+            this.path = this.actor.getPath(this.actor.position, this.target.position);
+        } else {
+            // 사용 가능한 타겟이 없을 경우, 일정 시간 후 다시 타겟 검색 시도
+            setTimeout(() => {
+                this.findNewTarget();
+            }, 1000); // 1초 후 다시 시도
         }
     }
 

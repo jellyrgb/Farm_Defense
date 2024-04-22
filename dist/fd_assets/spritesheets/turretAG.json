@@ -1,6 +1,6 @@
 {
-    "name": "turretD",
-    "spriteSheetImage": "turretD.png",
+    "name": "turretAG",
+    "spriteSheetImage": "turretAG.png",
     "spriteWidth": 32,
     "spriteHeight": 32,
     "leftBuffer": 0,

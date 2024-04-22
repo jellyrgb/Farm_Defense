@@ -119,13 +119,27 @@ export default class Level1 extends Scene {
         this.load.spritesheet("player", "fd_assets/spritesheets/kevin.json");
         this.load.spritesheet("home", "fd_assets/spritesheets/home.json");
 
-        // Load in the enemy and turret sprites
-        this.load.spritesheet("monsterA", "fd_assets/spritesheets/monsterA.json");
+        // Load in the enemy sprites
+        // this.load.spritesheet("monsterA", "fd_assets/spritesheets/monsterA.json");
         this.load.spritesheet("monsterB", "fd_assets/spritesheets/monsterB.json");
-        this.load.spritesheet("monsterC", "fd_assets/spritesheets/monsterC.json");
+        // this.load.spritesheet("monsterC", "fd_assets/spritesheets/monsterC.json");
+
+        // Load turret sprites
         this.load.spritesheet("turretA", "fd_assets/spritesheets/turretA.json");
         this.load.spritesheet("turretB", "fd_assets/spritesheets/turretB.json");
-        this.load.spritesheet("turretB", "fd_assets/spritesheets/turretC.json");
+        this.load.spritesheet("turretC", "fd_assets/spritesheets/turretC.json");
+        this.load.spritesheet("turretD", "fd_assets/spritesheets/turretD.json");
+
+        this.load.spritesheet("turretAS", "fd_assets/spritesheets/turretAS.json");
+        this.load.spritesheet("turretBS", "fd_assets/spritesheets/turretBS.json");
+        this.load.spritesheet("turretCS", "fd_assets/spritesheets/turretCS.json");
+        this.load.spritesheet("turretDS", "fd_assets/spritesheets/turretDS.json");
+
+        this.load.spritesheet("turretAG", "fd_assets/spritesheets/turretAG.json");
+        this.load.spritesheet("turretBG", "fd_assets/spritesheets/turretBG.json");
+        this.load.spritesheet("turretCG", "fd_assets/spritesheets/turretCG.json");
+        this.load.spritesheet("turretDG", "fd_assets/spritesheets/turretDG.json");
+
         this.load.image("monsterBLogo", "fd_assets/sprites/logoB.png")
 
         // Load the tilemap
@@ -134,7 +148,7 @@ export default class Level1 extends Scene {
 
         // Load the enemy locations
         this.load.object("enemy_location", "fd_assets/data/enemies/enemy_location.json");
-        this.load.object("test_location", "fd_assets/data/enemies/test_location.json")
+        this.load.object("home_location", "fd_assets/data/enemies/home_location.json")
 
         // Load the seed locations
         this.load.object("seeds", "fd_assets/data/items/seeds.json");
@@ -313,9 +327,12 @@ export default class Level1 extends Scene {
             this.handleEvent(this.receiver.getNextEvent());
         }
 
-
         for (let i = 0; i < this.battlers.length; i++) {
             for (let j = i + 1; j < this.battlers.length; j++) {
+                if (this.battlers[i].id === this.baseId || this.battlers[j].id === this.baseId) {
+                    continue;
+                }
+
                 // If they are same type of battlers and they are colliding
                 if (this.battlers[i].battleGroup === this.battlers[j].battleGroup &&
                     this.collides(this.battlers[i], this.battlers[j])) {
@@ -326,11 +343,12 @@ export default class Level1 extends Scene {
         }
 
         this.updateEnemyCountLabel();
+
         // Esc menu 
         if (Input.isKeyJustPressed("escape")) {       
             this.pause();
             this.togglePauseMenu();
-            if(!this.textInput.isHidden()){
+            if (!this.textInput.isHidden()) {
                 this.CheatInput();
             }
         }
@@ -340,10 +358,11 @@ export default class Level1 extends Scene {
         this.inventoryHud.update(deltaT);
         this.healthbars.forEach(healthbar => healthbar.update(deltaT));
 
+        
         if (this.blueEnemyCount === 0 && this.night) {
             // Output the screen message: You have survived the night!
-            const nightBackground = new Rect(new Vec2(0, 0), new Vec2(1000, 1000));
-            nightBackground.color = new Color(0, 0, 0, 0.8);
+            const nightBackground = new Rect(new Vec2(180, 180), new Vec2(220, 180));
+            nightBackground.color = new Color(0, 0, 0, 0.5);
             this.enemyCount.addNode(nightBackground);
 
             let message = this.add.uiElement(UIElementType.LABEL, "enemyCount", {position: new Vec2(180, 180), text: "You have survived the night!"});
@@ -352,6 +371,7 @@ export default class Level1 extends Scene {
 
             // Proceed to the next level after 3 seconds
             setTimeout(() => {
+                MainMenu.maxLevelUnlocked = Math.max(MainMenu.maxLevelUnlocked, 2);
                 this.sceneManager.changeToScene(Level2);
             }, 3000);
         }
@@ -455,10 +475,8 @@ export default class Level1 extends Scene {
         if(cheatCode == "6") {
             this.sceneManager.changeToScene(Level6);
         }
-        if(cheatCode == "IMNOTHURT"){
-            player.maxHealth = 100000;
-            player.health = 100000;
-            console.log("플레이어 최대체력 , 현재 체력 : ", player.maxHealth , player.health);
+        if(cheatCode == "UNLOCK"){
+            MainMenu.maxLevelUnlocked = Math.max(MainMenu.maxLevelUnlocked, 6);
         }
         if(cheatCode == "INVISIBLE"){
             player.visible = false;
@@ -568,33 +586,86 @@ export default class Level1 extends Scene {
     protected handleItemGrowUp(event: GameEvent): void {
         let item = event.data.get("item");
         
-        if (item.star === 1) {
-            this.growTurretA(event);
-        } else if (item.star === 2) {
-            this.growTurretB(event);
-        } else if (item.star === 3) {
-            this.growTurretC(event);
+        let name = "";
+        let health = 0;
+        let itemType = "";
+        let itemStar = "";
+
+        if (item.st === 1) {
+            name = "turretA";
+            health = 100;
+            itemType = "tomato";
+            itemStar = "normal";
+        } else if (item.st === 2) {
+            name = "turretAS";
+            health = 100;
+            itemType = "tomato";
+            itemStar = "silver";
+        } else if (item.st === 2) {
+            name = "turretAG";
+            health = 100;
+            itemType = "tomato";
+            itemStar = "gold";
+        } else if (item.st === 4) {
+            name = "turretB";
+            health = 150;
+            itemType = "watermelon";
+            itemStar = "normal";
+        } else if (item.st === 5) {
+            name = "turretBS";
+            health = 150;
+            itemType = "watermelon";
+            itemStar = "silver";
+        } else if (item.st === 6) {
+            name = "turretBG";
+            health = 150;
+            itemType = "watermelon";
+            itemStar = "gold";
+        } else if (item.st === 7) {
+            name = "turretC";
+            health = 200;
+            itemType = "peach";
+            itemStar = "normal";
+        } else if (item.st === 8) {
+            name = "turretCS";
+            health = 200;
+            itemType = "peach";
+            itemStar = "silver";
+        } else if (item.st === 9) {
+            name = "turretCG";
+            health = 200;
+            itemType = "peach";
+            itemStar = "gold";
+        } else if (item.st === 10) {
+            name = "turretD";
+            health = 250;
+            itemType = "lemon";
+            itemStar = "normal";
+        } else if (item.st === 11) {
+            name = "turretDS";
+            health = 250;
+            itemType = "lemon";
+            itemStar = "silver";
+        } else {
+            name = "turretDG";
+            health = 250;
+            itemType = "lemon";
+            itemStar = "gold";
         }
-    }
-
-    protected growTurretA(event: GameEvent): void {
-        let item = event.data.get("item");
         
-        // Change the item into Turret object, and add it to the battlers
-        let turret = this.add.animatedSprite(NPCActor, "turretA", "primary");
+        let turret = this.add.animatedSprite(NPCActor, name, "primary");
         this.turret = turret;
    
         turret.animation.play("GROW_UP", false, ItemEvent.FINISH_GROW_UP);
-        console.log("성장 모션");
 
         turret.position.set(item.position.x, item.position.y);
         turret.addPhysics(new AABB(Vec2.ZERO, new Vec2(7, 7)), null, false);
         
         turret.battleGroup = 1;
         turret.type = "turret";
-        turret.speed = 0;
-        turret.health = 100;
-        turret.maxHealth = 100;
+        turret.speed = 10;
+        turret.health = health;
+        turret.maxHealth = health;
         turret.navkey = "navmesh";
 
         // Give the NPCS their healthbars
@@ -602,78 +673,10 @@ export default class Level1 extends Scene {
         this.healthbars.set(turret.id, healthbar);
 
         setTimeout(() => {
-            turret.addAI(TurretBehavior, {target: this.battlers[0], range: 1000});
+            turret.addAI(TurretBehavior, {target: this.battlers[0], range: 150, type: itemType, star: itemStar});
             this.battlers.push(turret);
             this.turret = turret;
         }, 4000);
-
-        // item.destroy();
-    }
-
-    protected growTurretB(event: GameEvent): void {
-        let item = event.data.get("item");
-        
-        // Change the item into Turret object, and add it to the battlers
-        let turret = this.add.animatedSprite(NPCActor, "turretB", "primary");
-        this.turret = turret;
-   
-        turret.animation.play("GROW_UP", false, ItemEvent.FINISH_GROW_UP);
-        console.log("성장 모션");
-
-        turret.position.set(item.position.x, item.position.y);
-        turret.addPhysics(new AABB(Vec2.ZERO, new Vec2(7, 7)), null, false);
-        
-        turret.battleGroup = 1;
-        turret.type = "turret";
-        turret.speed = 0;
-        turret.health = 100;
-        turret.maxHealth = 100;
-        turret.navkey = "navmesh";
-
-        // Give the NPCS their healthbars
-        let healthbar = new HealthbarHUD(this, turret, "primary", {size: turret.size.clone().scaled(2, 1/2), offset: turret.size.clone().scaled(0, -1/2)});
-        this.healthbars.set(turret.id, healthbar);
-
-        setTimeout(() => {
-            turret.addAI(TurretBehavior, {target: this.battlers[0], range: 1000});
-            this.battlers.push(turret);
-            this.turret = turret;
-        }, 4000);
-
-        //item.destroy();
-    }
-
-    protected growTurretC(event: GameEvent): void {
-        let item = event.data.get("item");
-        
-        // Change the item into Turret object, and add it to the battlers
-        let turret = this.add.animatedSprite(NPCActor, "turretC", "primary");
-        this.turret = turret;
-   
-        turret.animation.play("GROW_UP", false, ItemEvent.FINISH_GROW_UP);
-        console.log("성장 모션");
-
-        turret.position.set(item.position.x, item.position.y);
-        turret.addPhysics(new AABB(Vec2.ZERO, new Vec2(7, 7)), null, false);
-        
-        turret.battleGroup = 1;
-        turret.type = "turret";
-        turret.speed = 0;
-        turret.health = 100;
-        turret.maxHealth = 100;
-        turret.navkey = "navmesh";
-
-        // Give the NPCS their healthbars
-        let healthbar = new HealthbarHUD(this, turret, "primary", {size: turret.size.clone().scaled(2, 1/2), offset: turret.size.clone().scaled(0, -1/2)});
-        this.healthbars.set(turret.id, healthbar);
-
-        setTimeout(() => {
-            turret.addAI(TurretBehavior, {target: this.battlers[0], range: 1000});
-            this.battlers.push(turret);
-            this.turret = turret;
-        }, 4000);
-
-        //item.destroy();
     }
 
     protected handleItemPickedUp(event: GameEvent): void {
@@ -786,7 +789,9 @@ export default class Level1 extends Scene {
      */
     protected initializePlayer(): void {
         let player = this.add.animatedSprite(PlayerActor, "player", "primary");
-        player.position.set(200, 200);
+        
+        // Position of Kevin
+        player.position.set(263, 286);
         player.battleGroup = 1;
         player.health = 10;
         player.maxHealth = 10;
@@ -806,8 +811,8 @@ export default class Level1 extends Scene {
         player.addPhysics(new AABB(Vec2.ZERO, new Vec2(8, 8)));
 
         // Give the player a healthbar
-        let healthbar = new HealthbarHUD(this, player, "primary", {size: player.size.clone().scaled(2, 1/2), offset: player.size.clone().scaled(0, -1/2)});
-        this.healthbars.set(player.id, healthbar);
+        // let healthbar = new HealthbarHUD(this, player, "primary", {size: player.size.clone().scaled(2, 1/2), offset: player.size.clone().scaled(0, -1/2)});
+        // this.healthbars.set(player.id, healthbar);
 
         // Give the player PlayerAI
         player.addAI(PlayerAI);
@@ -822,8 +827,7 @@ export default class Level1 extends Scene {
      * Initialize the NPCs 
      */
     protected initializeNPCs(): void {
-
-        let home = this.load.getObject("test_location");
+        let home = this.load.getObject("home_location");
 
         // Initialize the base (home)
         for (let i = 0; i < home.enemies.length; i++) {
@@ -854,24 +858,22 @@ export default class Level1 extends Scene {
         setTimeout(() => {
             // Output the screen message in the player's head: "The night has arrived"
             const nightBackground = new Rect(new Vec2(0, 0), new Vec2(1000, 1000));
-            nightBackground.color = new Color(0, 0, 0, 0.8);
+            nightBackground.color = new Color(0, 0, 0, 0.6);
             this.enemyCount.addNode(nightBackground);
-            let message = this.add.uiElement(UIElementType.LABEL, "enemyCount", {position: new Vec2(180, 180), text: "The night has arrived"});
+            let message = this.add.uiElement(UIElementType.LABEL, "enemyCount", {position: new Vec2(180, 180), text: "The night has arrived..."});
             (message as Label).setTextColor(Color.WHITE);
             (message as Label).fontSize = 30;
             setTimeout(() => {
                 message.destroy();
                 nightBackground.color = new Color(0, 0, 0, 0.2);
-            }, 3000);
+            }, 2000);
             this.initializeMonsters();
         }, waveTime);
-
-        
     }
 
     protected initializeMonsters(): void {
         let enemy = this.load.getObject("enemy_location");
-        // Initialize the blue enemies
+
         for (let i = 0; i < enemy.enemies.length; i++) {
             let npc = this.add.animatedSprite(NPCActor, "monsterB", "primary");
             npc.position.set(enemy.enemies[i][0], enemy.enemies[i][1]);
@@ -889,7 +891,7 @@ export default class Level1 extends Scene {
             npc.navkey = "navmesh";
 
             // Give the NPCs their AI
-            npc.addAI(EnemyBehavior, {target: this.battlers[0], range: 1000});
+            npc.addAI(EnemyBehavior, {target: this.battlers[0], range: 800});
 
             // Play the NPCs "IDLE" animation 
             npc.animation.play("IDLE");

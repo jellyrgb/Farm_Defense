@@ -22,7 +22,7 @@ export default class MainMenu extends Scene {
     private controls: Layer;
     private help: Layer;
     private level : Layer;
-
+    public static maxLevelUnlocked: number = 1;
 
     public loadScene(){
 
@@ -149,7 +149,33 @@ export default class MainMenu extends Scene {
             levelButton.size.set(250, 200);
             (levelButton as Label).setTextColor(Color.WHITE);
             levelButton.backgroundColor = Color.TRANSPARENT;
-            levelButton.onClickEventId = "level" + (index + 1);
+            if (index + 1 <= MainMenu.maxLevelUnlocked) {
+                (levelButton as Label).setTextColor(Color.WHITE);
+                levelButton.onClickEventId = "level" + (index + 1);
+            } else {
+                (levelButton as Label).setTextColor(new Color(96, 96, 96)); 
+                (levelButton as Label).fontSize = 20;
+                (levelButton as Label).setText(lev + " (Locked)");
+                levelButton.onClick = () => {
+                    // 임시 Rect 및 Label 생성
+                    const tempRect = new Rect(new Vec2(500, 500), new Vec2(800, 400));
+                    tempRect.borderWidth = 2;
+                    tempRect.borderColor = new Color(0, 0, 0);
+                    tempRect.color = new Color(204, 255, 255, 0.9);
+                    this.level.addNode(tempRect);
+                
+                    const tempLabel = <Label>this.add.uiElement(UIElementType.LABEL, "levelSelect", {
+                        position: new Vec2(500, 500),
+                        text: `You should clear Level ${index} !`
+                    });
+                    tempLabel.textColor = Color.BLACK;
+
+                    setTimeout(() => {
+                        this.level.removeNode(tempRect); // Rect 제거
+                        tempLabel.destroy(); // Label 제거
+                    }, 1000);
+                }
+            }
         });
 
         // Controls screen
