@@ -144,11 +144,9 @@ export default class Level1 extends Scene {
 
         // Load the tilemap
         this.load.tilemap("level1", "fd_assets/tilemaps/level1.json");
-        this.load.tilemap("level1_night", "fd_assets/tilemaps/level1_night.json");
 
         // Load the enemy locations
         this.load.object("enemy_location", "fd_assets/data/enemies/enemy_location.json");
-        this.load.object("home_location", "fd_assets/data/enemies/home_location.json")
 
         // Load the seed locations
         this.load.object("seeds", "fd_assets/data/items/seeds.json");
@@ -250,6 +248,9 @@ export default class Level1 extends Scene {
         // Create the NPCS
         this.initializeNPCs();
 
+        // Make sure every characters are behind "leaves" layer
+        this.getLayer("primary").setDepth(0);
+        this.getLayer("leaves").setDepth(1);
 
         this.enemyCount = this.addUILayer("enemyCount");
         this.enemyCount.setHidden(false);
@@ -378,7 +379,7 @@ export default class Level1 extends Scene {
 
         let player = this.battlers.find(b => b instanceof PlayerActor) as PlayerActor;
         if (Input.isKeyJustPressed("y")){
-            console.log(" 플레이어 위치 :", player.position.x , player.position.y);
+            console.log("Player Pos:", player.position.x , player.position.y);
         }
     }
     private updateEnemyCountLabel() {
@@ -459,7 +460,7 @@ export default class Level1 extends Scene {
     
     public handleCheatSubmission(cheatCode: string): void {
         let player = this.battlers.find(b => b instanceof PlayerActor) as PlayerActor;
-        console.log("치트코드 진행 : ", cheatCode);
+        console.log("Cheat code handling: ", cheatCode);
         if(cheatCode == "2"){
             this.sceneManager.changeToScene(Level2);
         }
@@ -480,11 +481,9 @@ export default class Level1 extends Scene {
         }
         if(cheatCode == "INVISIBLE"){
             player.visible = false;
-            console.log("플레이어 안보임")
         }
         if(cheatCode == "VISIBLE"){
             player.visible = true;
-            console.log("플레이어 보임 ");
         }
 
     }
@@ -512,11 +511,10 @@ export default class Level1 extends Scene {
                 break;
             }
             case "submitCheat": {
-                console.log("치트코드 제출");
                 const textInputLayer = this.getLayer("textInput");
                 const textInputNode = textInputLayer.getItems().find(node => node instanceof TextInput) as TextInput;
                 if (textInputNode) {
-                    console.log("Entered cheat code:", textInputNode.text);
+                    console.log("Cheat code submitted:", textInputNode.text);
                     this.handleCheatSubmission(textInputNode.text);
                     textInputNode.text = "";
                 }
@@ -525,7 +523,6 @@ export default class Level1 extends Scene {
 
             case ItemEvent.FINISH_GROW_UP: {
                 if (this.turret) {
-                    console.log("성장 끝, 보통 모션 출력");
                     this.turret.animation.play("IDLE", true);
                 }
                 break;
@@ -685,7 +682,6 @@ export default class Level1 extends Scene {
         let node = event.data.get("node");
         
         inventory.add(item);
-        console.log(inventory);
     }
 
     protected handleItemDropped(event: GameEvent, node: GameNode, inventory: Inventory): void {
@@ -695,36 +691,31 @@ export default class Level1 extends Scene {
         let col = item.position.x;
         let row = item.position.y;
         let tile = this.floors.getTilemapPosition(col, row);
-        console.log(tile);
 
-        // 위쪽 밭
-        if (tile.y >= 2 && tile.y <= 11) {
-            // If tile.x is not 0, 1, 5, 6, 10, 11, 15, 16, 20, 21, 25, 26, 30, 31
-            if (tile.x % 5 !== 0 && tile.x % 5 !== 1) {
+        // Upper land
+        if (tile.y >= 9 && tile.y <= 13) {
+            // If tile.x is 2~14 or 18~29
+            if ((tile.x >= 2 && tile.x <= 14) || (tile.x >= 18 && tile.x <= 29)) {
                 // Emit an event to make the item grow up
                 inventory.remove(item);
-                console.log("제거된 아이템 ID : ", item.id);
                 
                 item.getSprite().destroy();
 
                 this.seeds = this.seeds.filter(seed => seed !== item);
-                console.log("새로운 씨앗 배열 :", this.seeds);
                 this.emitter.fireEvent(ItemEvent.ITEM_GROW_UP, {item: item});
             }
         }
 
-        // 아래쪽 밭
-        if (tile.y >= 17 && tile.y <= 20) {
-            // If tile.x is 1~14 or 18~30
-            if (tile.x >= 1 && tile.x <= 14 || tile.x >= 18 && tile.x <= 30) {
+        // Lower land
+        if (tile.y >= 15 && tile.y <= 19) {
+            // If tile.x is 2~14 or 18~29
+            if ((tile.x >= 2 && tile.x <= 14) || (tile.x >= 18 && tile.x <= 29)) {
                 // Emit an event to make the item grow up
                 inventory.remove(item);
-                console.log("제거된 아이템 ID : ", item.id);
                 
                 item.getSprite().destroy();
 
                 this.seeds = this.seeds.filter(seed => seed !== item);
-                console.log("새로운 씨앗 배열 :", this.seeds);
                 this.emitter.fireEvent(ItemEvent.ITEM_GROW_UP, {item: item});
             }
         }
@@ -734,13 +725,13 @@ export default class Level1 extends Scene {
     protected showCooldownMessage(remainingTime: string): void {
         const uiLayer = this.getLayer("enemyCount");
 
-        const background = new Rect(new Vec2(180, 180), new Vec2(170, 25));
+        const background = new Rect(new Vec2(180, 180), new Vec2(240, 25));
         background.color = new Color(0, 0, 0, 0.4);
         uiLayer.addNode(background);
 
         const message = this.add.uiElement(UIElementType.LABEL, "enemyCount", {
             position: new Vec2(180, 180),
-            text: `Need ${remainingTime} seconds to planting`
+            text: `Wait ${remainingTime} seconds to plant another seed.`
         });
         (message as Label).setTextColor(Color.WHITE);
         (message as Label).fontSize = 24;
@@ -791,14 +782,14 @@ export default class Level1 extends Scene {
         let player = this.add.animatedSprite(PlayerActor, "player", "primary");
         
         // Position of Kevin
-        player.position.set(263, 286);
+        player.position.set(264, 227);
         player.battleGroup = 1;
         player.health = 10;
         player.maxHealth = 10;
 
         player.inventory.onChange = ItemEvent.INVENTORY_CHANGED
-        console.log(this.getLayer("slots").getDepth());
-        console.log(this.getLayer("items").getDepth());
+        // console.log(this.getLayer("slots").getDepth());
+        // console.log(this.getLayer("items").getDepth());
         this.inventoryHud = new InventoryHUD(this, player.inventory, "inventorySlot", {
             start: new Vec2(232, 998),
             slotLayer: "slots",
@@ -827,31 +818,28 @@ export default class Level1 extends Scene {
      * Initialize the NPCs 
      */
     protected initializeNPCs(): void {
-        let home = this.load.getObject("home_location");
-
         // Initialize the base (home)
-        for (let i = 0; i < home.enemies.length; i++) {
-            let baseNPC = this.add.animatedSprite(NPCActor, "home", "primary");
-            baseNPC.position.set(home.enemies[i][0], home.enemies[i][1]);
-            baseNPC.addPhysics(new AABB(Vec2.ZERO, new Vec2(7, 7)), null, false);
+        let baseNPC = this.add.animatedSprite(NPCActor, "home", "primary");
+        baseNPC.position.set(264, 95);
+        baseNPC.addPhysics(new AABB(Vec2.ZERO, new Vec2(7, 7)), null, false);
 
-            // Give the NPCS their healthbars
-            let healthbar = new HealthbarHUD(this, baseNPC, "primary", {size: baseNPC.size.clone().scaled(2, 1/2), offset: baseNPC.size.clone().scaled(0, -1/2)});
-            this.healthbars.set(baseNPC.id, healthbar);
+        // Give the NPCS their healthbars
+        let healthbar = new HealthbarHUD(this, baseNPC, "primary", {size: baseNPC.size.clone().scaled(4, 1/2), offset: baseNPC.size.clone().scaled(0, -1/2)});
+        this.healthbars.set(baseNPC.id, healthbar);
 
-            this.baseId = baseNPC.id;
+        this.baseId = baseNPC.id;
 
-            baseNPC.type = "base";
-            baseNPC.battleGroup = 1;
-            baseNPC.speed = 0;
-            baseNPC.health = 100;
-            baseNPC.maxHealth = 100;
-            baseNPC.navkey = "navmesh";
+        baseNPC.type = "base";
+        baseNPC.battleGroup = 1;
+        baseNPC.speed = 0;
+        baseNPC.health = 1000;
+        baseNPC.maxHealth = 1000;
+        baseNPC.navkey = "navmesh";
 
-            baseNPC.addAI(BaseBehavior);
-            baseNPC.animation.play("IDLE");
-            this.battlers.push(baseNPC);
-        }
+        baseNPC.addAI(BaseBehavior);
+        baseNPC.animation.play("IDLE");
+        this.battlers.push(baseNPC);
+        
 
         let waveTime = 10000;
 

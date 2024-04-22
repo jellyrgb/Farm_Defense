@@ -87,7 +87,6 @@ export default class TurretAttack extends NPCAction {
         }
 
         setTimeout(() => {
-            console.log("IDLE 실행");
             this.actor.animation.play("IDLE");
         }, 1000);
 

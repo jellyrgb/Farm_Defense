@@ -37,10 +37,11 @@ export default class MonsterAttack extends NPCAction {
 
             this.timer.start();
         }
+        
         setTimeout(() => {
-            console.log("IDLE 실행");
             this.actor.animation.play("IDLE");
         }, 1000);
+
         // Finish the action
         this.finished();
     }

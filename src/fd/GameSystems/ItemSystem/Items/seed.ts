@@ -11,7 +11,6 @@ export default class Seed extends Item {
         super(sprite);
 
         let rand = Math.random();
-        console.log(rand.toFixed(2));
 
         if (rand < 0.4) {
             if (rand < 0.2) {
