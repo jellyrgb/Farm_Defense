@@ -125,6 +125,7 @@ export default class Level1 extends Scene {
         this.load.spritesheet("monsterC", "fd_assets/spritesheets/monsterC.json");
         this.load.spritesheet("turretA", "fd_assets/spritesheets/turretA.json");
         this.load.spritesheet("turretB", "fd_assets/spritesheets/turretB.json");
+        this.load.spritesheet("turretB", "fd_assets/spritesheets/turretC.json");
         this.load.image("monsterBLogo", "fd_assets/sprites/logoB.png")
 
         // Load the tilemap
@@ -354,6 +355,11 @@ export default class Level1 extends Scene {
                 this.sceneManager.changeToScene(Level2);
             }, 3000);
         }
+
+        let player = this.battlers.find(b => b instanceof PlayerActor) as PlayerActor;
+        if (Input.isKeyJustPressed("y")){
+            console.log(" 플레이어 위치 :", player.position.x , player.position.y);
+        }
     }
     private updateEnemyCountLabel() {
         if (this.enemyCountLabel) {
@@ -536,7 +542,9 @@ export default class Level1 extends Scene {
                 break;
             }
             case ItemEvent.ITEM_DROPPED: {
-                this.handleItemDropped(event);
+                let node = event.data.get("node");
+                let inventory = event.data.get("inventory");
+                this.handleItemDropped(event, node, inventory);
                 break;
             }
 
@@ -565,7 +573,7 @@ export default class Level1 extends Scene {
         } else if (item.star === 2) {
             this.growTurretB(event);
         } else if (item.star === 3) {
-            this.growTurretA(event);
+            this.growTurretC(event);
         }
     }
 
@@ -635,6 +643,39 @@ export default class Level1 extends Scene {
         //item.destroy();
     }
 
+    protected growTurretC(event: GameEvent): void {
+        let item = event.data.get("item");
+        
+        // Change the item into Turret object, and add it to the battlers
+        let turret = this.add.animatedSprite(NPCActor, "turretC", "primary");
+        this.turret = turret;
+   
+        turret.animation.play("GROW_UP", false, ItemEvent.FINISH_GROW_UP);
+        console.log("성장 모션");
+
+        turret.position.set(item.position.x, item.position.y);
+        turret.addPhysics(new AABB(Vec2.ZERO, new Vec2(7, 7)), null, false);
+        
+        turret.battleGroup = 1;
+        turret.type = "turret";
+        turret.speed = 0;
+        turret.health = 100;
+        turret.maxHealth = 100;
+        turret.navkey = "navmesh";
+
+        // Give the NPCS their healthbars
+        let healthbar = new HealthbarHUD(this, turret, "primary", {size: turret.size.clone().scaled(2, 1/2), offset: turret.size.clone().scaled(0, -1/2)});
+        this.healthbars.set(turret.id, healthbar);
+
+        setTimeout(() => {
+            turret.addAI(TurretBehavior, {target: this.battlers[0], range: 1000});
+            this.battlers.push(turret);
+            this.turret = turret;
+        }, 4000);
+
+        //item.destroy();
+    }
+
     protected handleItemPickedUp(event: GameEvent): void {
         let item = event.data.get("item");
         let inventory = event.data.get("inventory");
@@ -644,7 +685,7 @@ export default class Level1 extends Scene {
         console.log(inventory);
     }
 
-    protected handleItemDropped(event: GameEvent): void {
+    protected handleItemDropped(event: GameEvent, node: GameNode, inventory: Inventory): void {
         let item = event.data.get("item");
                 
         // Get the col and row of the tile that the item is dropped
@@ -658,6 +699,13 @@ export default class Level1 extends Scene {
             // If tile.x is not 0, 1, 5, 6, 10, 11, 15, 16, 20, 21, 25, 26, 30, 31
             if (tile.x % 5 !== 0 && tile.x % 5 !== 1) {
                 // Emit an event to make the item grow up
+                inventory.remove(item);
+                console.log("제거된 아이템 ID : ", item.id);
+                
+                item.getSprite().destroy();
+
+                this.seeds = this.seeds.filter(seed => seed !== item);
+                console.log("새로운 씨앗 배열 :", this.seeds);
                 this.emitter.fireEvent(ItemEvent.ITEM_GROW_UP, {item: item});
             }
         }
@@ -667,9 +715,17 @@ export default class Level1 extends Scene {
             // If tile.x is 1~14 or 18~30
             if (tile.x >= 1 && tile.x <= 14 || tile.x >= 18 && tile.x <= 30) {
                 // Emit an event to make the item grow up
+                inventory.remove(item);
+                console.log("제거된 아이템 ID : ", item.id);
+                
+                item.getSprite().destroy();
+
+                this.seeds = this.seeds.filter(seed => seed !== item);
+                console.log("새로운 씨앗 배열 :", this.seeds);
                 this.emitter.fireEvent(ItemEvent.ITEM_GROW_UP, {item: item});
             }
         }
+        
     }
 
     protected showCooldownMessage(remainingTime: string): void {

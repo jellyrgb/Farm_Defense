@@ -4,6 +4,7 @@ import Label from "../../Wolfie2D/Nodes/UIElements/Label";
 import { UIElementType } from "../../Wolfie2D/Nodes/UIElements/UIElementTypes";
 import Scene from "../../Wolfie2D/Scene/Scene";
 import Color from "../../Wolfie2D/Utils/Color";
+import MainMenu from "./MainMenu";
 
 export default class GameOver extends Scene {
 
@@ -14,5 +15,10 @@ export default class GameOver extends Scene {
 
         const gameOver = <Label>this.add.uiElement(UIElementType.LABEL, "primary", {position: new Vec2(center.x, center.y), text: "Game Over"});
         gameOver.textColor = Color.WHITE;
+
+        setTimeout(() => {
+            this.viewport.setZoomLevel(1);
+            this.sceneManager.changeToScene(MainMenu);
+        }, 3000);
     }
 }

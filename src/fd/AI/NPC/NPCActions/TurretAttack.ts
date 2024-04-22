@@ -23,10 +23,11 @@ export default class TurretAttack extends NPCAction {
     }
 
     public performAction(target: TargetableEntity): void {
-        this.timer.isStopped() ? console.log("Turret attack cooling down!") : console.log("Turret attack ready!");
+        //this.timer.isStopped() ? console.log("Turret attack cooling down!") : console.log("Turret attack ready!");
 
         if (this.timer.isStopped() && this.actor.position.distanceTo(target.position) < 300) {
             this.actor.animation.play("ATTACKING", false);
+
 
             // Send a attacked event
             this.emitter.fireEvent(BattlerEvent.BATTLER_ATTACK, {
@@ -37,6 +38,10 @@ export default class TurretAttack extends NPCAction {
 
             this.timer.start();
         }
+        setTimeout(() => {
+            console.log("IDLE 실행");
+            this.actor.animation.play("IDLE");
+        }, 1000);
         // Finish the action
         this.finished();
     }

@@ -40,9 +40,18 @@ export default abstract class PlayerState extends State {
         this.owner = owner;
     }
 
+    private updateCount: number = 0;
+    private interver : number = 40;
+
     public override onEnter(options: Record<string, any>): void {}
     public override onExit(): Record<string, any> { return {}; }
     public override update(deltaT: number): void {
+
+
+        if (this.updateCount % this.interver === 0) {
+            this.owner.animation.play("IDLE");
+        }
+        this.updateCount++;
 
         // Move the player
         this.parent.owner.move(this.parent.controller.moveDir);
@@ -79,11 +88,11 @@ export default abstract class PlayerState extends State {
                     item.position.set(this.owner.position.x, this.owner.position.y);
                     this.owner.inventory.remove(item.id);
                     this.owner.lastItemDropped = now;
-                    this.emitter.fireEvent(ItemEvent.ITEM_DROPPED, {item: item});
+                    this.emitter.fireEvent(ItemEvent.ITEM_DROPPED, {item: item, node: this.owner, inventory: this.owner.inventory});
                 }
             }
         }
-
+        
     }
 
 
