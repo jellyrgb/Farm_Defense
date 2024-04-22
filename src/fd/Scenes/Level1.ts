@@ -27,6 +27,7 @@ import InventoryHUD from "../GameSystems/HUD/InventoryHUD";
 import Inventory from "../GameSystems/ItemSystem/Inventory";
 import Item from "../GameSystems/ItemSystem/Item";
 import Seed from "../GameSystems/ItemSystem/Items/Seed";
+import Shop from "../GameSystems/ItemSystem/Items/Shop";
 import { ClosestPositioned } from "../GameSystems/Searching/Reducers";
 import BasicTargetable from "../GameSystems/Targeting/BasicTargetable";
 import Position from "../GameSystems/Targeting/Position";
@@ -63,9 +64,10 @@ export default class Level1 extends Scene {
     /** Healthbars for the battlers */
     private healthbars: Map<number, HealthbarHUD>;
 
-    private bases: BattlerBase[];
-
     private seeds: Array<Seed>;
+    private shop: Shop;
+    private dollar: number;
+    private shopMenu: Layer;
 
     // The wall layer of the tilemap
     private walls: OrthogonalTilemap;
@@ -93,11 +95,9 @@ export default class Level1 extends Scene {
     private levelEnded: boolean;
 
     private baseId: number;
+    private shopId: number;
 
     private enemyCountLabel: Label;
-    
-    // List of turrets waiting to be spawned
-    private turretWaiting: Array<NPCActor>;
 
     public constructor(viewport: Viewport, sceneManager: SceneManager, renderingManager: RenderingManager, options: Record<string, any>) {
         super(viewport, sceneManager, renderingManager, options);
@@ -106,9 +106,6 @@ export default class Level1 extends Scene {
         this.healthbars = new Map<number, HealthbarHUD>();
 
         this.seeds = new Array<Seed>();
-
-        // Initialize turretWaiting list as an empty array
-        this.turretWaiting = new Array<NPCActor>();
     }
 
     /**
@@ -150,11 +147,13 @@ export default class Level1 extends Scene {
 
         // Load the seed locations
         this.load.object("seeds", "fd_assets/data/items/seeds.json");
+        this.load.object("shop", "fd_assets/data/items/shop.json");
 
         // Load the image sprites
         this.load.image("seed", "fd_assets/sprites/seed.png");
         this.load.image("inventorySlot", "fd_assets/sprites/inventory.png");
         this.load.image("timer", "fd_assets/sprites/moon.png");
+        this.load.image("shop", "fd_assets/sprites/shop.png");
     }
 
     /**
@@ -167,7 +166,32 @@ export default class Level1 extends Scene {
         this.levelEnded = false;
         let enemy = this.load.getObject("enemy_location");
         this.blueEnemyCount = enemy.enemies.length;
+        
+        // Initialize the shop
+        this.shopMenu = this.addUILayer("shop");
+        this.shopMenu.setHidden(true);
 
+        const shopLayer = this.getLayer("shop");
+        const centerShop = new Vec2(200, 200);
+
+        const shopBackground = new Rect(new Vec2(centerShop.x - 25, centerShop.y - 25), new Vec2(200, 200));
+        shopBackground.color = new Color(0, 0, 0, 0.9);
+        shopBackground.borderColor = new Color(255, 255, 255);
+        shopBackground.borderWidth = 2;
+        shopLayer.addNode(shopBackground);
+
+        // Create buttons for shop layer
+        // const buyButton = this.add.uiElement(UIElementType.BUTTON, "shop", {position: new Vec2(center.x - 25, center.y - 65),text: "Buy Seed"});
+        // buyButton.size.set(60, 60);
+        // buyButton.onClickEventId = "buySeed";
+
+        // const sellButton = this.add.uiElement(UIElementType.BUTTON, "shop", {position: new Vec2(center.x - 25, center.y - 25),text: "Sell Seed"});
+        // sellButton.size.set(60, 60);
+        // sellButton.onClickEventId = "sellSeed";
+
+        const exitButton = this.add.uiElement(UIElementType.BUTTON, "shop", {position: new Vec2(centerShop.x - 25, centerShop.y + 15), text: "Exit"});
+        exitButton.size.set(60, 60);
+        exitButton.onClickEventId = "exitShop";
 
         // pause menu initialize
         this.pauseMenu = this.addUILayer("pauseMenu");
@@ -176,23 +200,23 @@ export default class Level1 extends Scene {
         const pauseMenuLayer = this.getLayer("pauseMenu");
         const centerESC = new Vec2(200, 200);
 
-        const menuBackground = new Rect(new Vec2(centerESC.x - 25, centerESC.y - 25), new Vec2(300, 300));
+        const menuBackground = new Rect(new Vec2(centerESC.x - 25, centerESC.y - 25), new Vec2(150, 150));
         menuBackground.color = new Color(0, 0, 0, 0.9);
         menuBackground.borderColor = new Color(255, 255, 255);
         menuBackground.borderWidth = 2;
         pauseMenuLayer.addNode(menuBackground);
 
         // Create buttons
-        const resumeButton = this.add.uiElement(UIElementType.BUTTON, "pauseMenu", {position: new Vec2(centerESC.x - 25, centerESC.y - 95),text: "Resume"});
-        resumeButton.size.set(100, 100);
+        const resumeButton = this.add.uiElement(UIElementType.BUTTON, "pauseMenu", {position: new Vec2(centerESC.x - 25, centerESC.y - 65),text: "Resume"});
+        resumeButton.size.set(60, 60);
         resumeButton.onClickEventId = "resumeGame";
 
         const cheatButton = this.add.uiElement(UIElementType.BUTTON, "pauseMenu", {position: new Vec2(centerESC.x - 25, centerESC.y - 25),text: "Cheat Code"});
-        cheatButton.size.set(100, 100);
+        cheatButton.size.set(60, 60);
         cheatButton.onClickEventId = "cheat";
 
-        const mainMenuButton = this.add.uiElement(UIElementType.BUTTON, "pauseMenu", {position: new Vec2(centerESC.x - 25, centerESC.y + 50),text: "Main Menu"});
-        mainMenuButton.size.set(100, 100);
+        const mainMenuButton = this.add.uiElement(UIElementType.BUTTON, "pauseMenu", {position: new Vec2(centerESC.x - 25, centerESC.y + 15),text: "Main Menu"});
+        mainMenuButton.size.set(60, 60);
         mainMenuButton.onClickEventId = "backToMainMenu";
         
         // Cheat text input
@@ -201,26 +225,26 @@ export default class Level1 extends Scene {
 
         const textInputLayer = this.getLayer("textInput");
 
-        const background = new Rect(new Vec2(centerESC.x - 25, centerESC.y - 25), new Vec2(500, 200));
+        const background = new Rect(new Vec2(centerESC.x - 25, centerESC.y - 25), new Vec2(270, 200));
         background.color = new Color(0, 0, 0);
         background.borderColor = new Color(255, 255, 255);
         background.borderWidth = 2;
         textInputLayer.addNode(background);
 
         const inputText = this.add.uiElement(UIElementType.TEXT_INPUT, "textInput", {position: new Vec2(centerESC.x - 60 , centerESC.y - 30)});
-        inputText.size.set(600, 100);
+        inputText.size.set(400, 80);
 
-        const submitButton = this.add.uiElement(UIElementType.BUTTON, "textInput", {position: new Vec2(300, 170),text: "Submit"});
+        const submitButton = this.add.uiElement(UIElementType.BUTTON, "textInput", {position: new Vec2(255, 170), text: "Submit"});
         submitButton.onClickEventId = "submitCheat";
         submitButton.backgroundColor = Color.TRANSPARENT;
-        submitButton.size.set(100, 50);
+        submitButton.size.set(90, 40);
 
         this.receiver.subscribe("resumeGame");
         this.receiver.subscribe("backToMainMenu");
         this.receiver.subscribe("cheat");
         this.receiver.subscribe("submitCheat");
         this.receiver.subscribe("growFinish");
-        this.receiver.subscribe(CooldownEvent.COOLDOWN_MESSAGE);
+        this.receiver.subscribe("exitShop");
 
 
         // Add in the tilemap
@@ -316,8 +340,10 @@ export default class Level1 extends Scene {
         this.addUILayer("health");
 
         this.receiver.subscribe(PlayerEvent.PLAYER_KILLED);
+        this.receiver.subscribe(PlayerEvent.SHOP_ENTERED);
         this.receiver.subscribe(BattlerEvent.BATTLER_KILLED);
         this.receiver.subscribe(BattlerEvent.BATTLER_RESPAWN);
+        this.receiver.subscribe(CooldownEvent.COOLDOWN_MESSAGE);
     }
 
     /**
@@ -326,6 +352,12 @@ export default class Level1 extends Scene {
     public override updateScene(deltaT: number): void {
         while (this.receiver.hasNextEvent()) {
             this.handleEvent(this.receiver.getNextEvent());
+        }
+
+        // If the player collides with the shop, emit an event
+        let player1 = this.battlers.find(b => b instanceof PlayerActor) as PlayerActor;
+        if (player1 && player1.position.distanceTo(this.shop.position) < 20) {
+            this.emitter.fireEvent(PlayerEvent.SHOP_ENTERED, {});
         }
 
         for (let i = 0; i < this.battlers.length; i++) {
@@ -442,6 +474,20 @@ export default class Level1 extends Scene {
         }
     }
 
+    private toggleShopMenu(): void {
+        const requestedLayer = this.getLayer("shop");
+        const isHidden = requestedLayer.isHidden();
+
+        if (!isHidden) {
+            requestedLayer.setHidden(true);
+            console.log("Shop is now hidden")
+        } 
+        else {
+            requestedLayer.setHidden(false);
+            console.log("Shop is now not hidden")
+        }
+    }
+
     private CheatInput(): void {
         const textInputLayer = this.getLayer("textInput");
         const isHidden = textInputLayer.isHidden();
@@ -525,6 +571,16 @@ export default class Level1 extends Scene {
                 if (this.turret) {
                     this.turret.animation.play("IDLE", true);
                 }
+                break;
+            }
+
+            // Shop Events
+            case PlayerEvent.SHOP_ENTERED: {
+                this.handleShopEntered(event);
+                break;
+            }
+            case "exitShop": {
+                this.toggleShopMenu();
                 break;
             }
 
@@ -674,6 +730,16 @@ export default class Level1 extends Scene {
             this.battlers.push(turret);
             this.turret = turret;
         }, 4000);
+    }
+
+    protected handleShopEntered(event: GameEvent): void {
+        // If the shop UI Layer is already open, do nothing
+        if (this.getLayer("shop").isHidden() === false) {
+            return;
+        }
+
+        // Open the shop UI Layer
+        this.toggleShopMenu();
     }
 
     protected handleItemPickedUp(event: GameEvent): void {
@@ -839,14 +905,14 @@ export default class Level1 extends Scene {
         baseNPC.addAI(BaseBehavior);
         baseNPC.animation.play("IDLE");
         this.battlers.push(baseNPC);
-        
 
+        // Initialize the monsters
         let waveTime = 10000;
 
         setTimeout(() => {
-            // Output the screen message in the player's head: "The night has arrived"
+            // Output the screen message: The night has arrived...
             const nightBackground = new Rect(new Vec2(0, 0), new Vec2(1000, 1000));
-            nightBackground.color = new Color(0, 0, 0, 0.6);
+            nightBackground.color = new Color(0, 0, 0, 0.5);
             this.enemyCount.addNode(nightBackground);
             let message = this.add.uiElement(UIElementType.LABEL, "enemyCount", {position: new Vec2(180, 180), text: "The night has arrived..."});
             (message as Label).setTextColor(Color.WHITE);
@@ -899,6 +965,11 @@ export default class Level1 extends Scene {
             this.seeds[i] = new Seed(sprite);
             this.seeds[i].position.set(seeds.items[i][0], seeds.items[i][1]);
         }
+
+        let shop = this.load.getObject("shop");
+        let shopSprite = this.add.sprite("shop", "primary");
+        this.shop = new Shop(shopSprite, this.dollar);
+        this.shop.position.set(shop.location[0][0], shop.location[0][1]);
     }
 
     protected initializeNavmesh(): void {
