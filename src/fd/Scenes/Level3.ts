@@ -412,7 +412,9 @@ export default class Level3 extends Scene {
             // Proceed to the next level after 3 seconds
             setTimeout(() => {
                 MainMenu.maxLevelUnlocked = Math.max(MainMenu.maxLevelUnlocked, 4);
-                this.sceneManager.changeToScene(Level4);
+                this.viewport.setZoomLevel(1);
+                this.sceneManager.changeToScene(MainMenu);
+                // this.sceneManager.changeToScene(Level2);
             }, 3000);
         }
 

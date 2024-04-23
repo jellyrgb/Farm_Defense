@@ -439,6 +439,7 @@ export default class Level1 extends Scene {
             // Proceed to the next level after 3 seconds
             setTimeout(() => {
                 MainMenu.maxLevelUnlocked = Math.max(MainMenu.maxLevelUnlocked, 2);
+                this.viewport.setZoomLevel(1);
                 this.sceneManager.changeToScene(MainMenu);
                 // this.sceneManager.changeToScene(Level2);
             }, 3000);
@@ -914,6 +915,8 @@ export default class Level1 extends Scene {
 
         if (battler.id === this.baseId) {
             // Change scene to gameover
+            // Stop bgm
+            this.emitter.fireEvent("stop_sound", {key: "background_music"});
             this.sceneManager.changeToScene(GameOver);
         }
 

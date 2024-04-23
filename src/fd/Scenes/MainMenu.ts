@@ -445,14 +445,17 @@ export default class MainMenu extends Scene {
             case "level1": {
                 // Play the click sound
                 this.emitter.fireEvent("play_sound", {key: "click", loop: false, holdReference: false});
-                
-                console.log("1레벨 진입");
+                // Stop playing the background music
+                this.emitter.fireEvent("stop_sound", {key: "bgm"});
+
                 this.sceneManager.changeToScene(Level1);
                 break;
             }
             case "level2": {
                 // Play the click sound
                 this.emitter.fireEvent("play_sound", {key: "click", loop: false, holdReference: false});
+                // Stop playing the background music
+                this.emitter.fireEvent("stop_sound", {key: "bgm"});
                 
                 this.sceneManager.changeToScene(Level2);
                 break;
@@ -460,6 +463,8 @@ export default class MainMenu extends Scene {
             case "level3": {
                 // Play the click sound
                 this.emitter.fireEvent("play_sound", {key: "click", loop: false, holdReference: false});
+                // Stop playing the background music
+                this.emitter.fireEvent("stop_sound", {key: "bgm"});
                 
                 this.sceneManager.changeToScene(Level3);
                 break;
@@ -467,6 +472,8 @@ export default class MainMenu extends Scene {
             case "level4": {
                 // Play the click sound
                 this.emitter.fireEvent("play_sound", {key: "click", loop: false, holdReference: false});
+                // Stop playing the background music
+                this.emitter.fireEvent("stop_sound", {key: "bgm"});
                 
                 this.sceneManager.changeToScene(Level4);
                 break;
@@ -474,6 +481,8 @@ export default class MainMenu extends Scene {
             case "level5": {
                 // Play the click sound
                 this.emitter.fireEvent("play_sound", {key: "click", loop: false, holdReference: false});
+                // Stop playing the background music
+                this.emitter.fireEvent("stop_sound", {key: "bgm"});
                 
                 this.sceneManager.changeToScene(Level5);
                 break;
@@ -481,6 +490,8 @@ export default class MainMenu extends Scene {
             case "level6": {
                 // Play the click sound
                 this.emitter.fireEvent("play_sound", {key: "click", loop: false, holdReference: false});
+                // Stop playing the background music
+                this.emitter.fireEvent("stop_sound", {key: "bgm"});
                 
                 this.sceneManager.changeToScene(Level6);
                 break;
