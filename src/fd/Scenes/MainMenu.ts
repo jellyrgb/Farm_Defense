@@ -32,9 +32,15 @@ export default class MainMenu extends Scene {
         this.load.image("title", "fd_assets/sprites/title.png");
         this.load.image("splash", "fd_assets/sprites/splash.png");
         this.load.image("backgroundImage", "fd_assets/sprites/background.png");
+
+        this.load.audio("bgm", "fd_assets/sounds/main_menu_music.mp3");
+        this.load.audio("click", "fd_assets/sounds/main_menu_button.mp3");
     }
 
     public startScene(){
+        // Play the background music
+        this.emitter.fireEvent("play_sound", {key: "bgm", loop: true, holdReference: false});
+
         const center = this.viewport.getCenter();
 
         // Splash screen
@@ -247,13 +253,13 @@ export default class MainMenu extends Scene {
         const guideHeader = <Label>this.add.uiElement(UIElementType.LABEL, "guide", {position: new Vec2(center.x, center.y - 410), text: "Guide"});
         guideHeader.textColor = Color.CYAN;
 
-        const guideText1 = "  - You can move Kevin using the W, A, S, and D keys.  ";
-        const guideText2 = "  - You can pick up items using the E key.  ";
-        const guideText3 = "  - You can drop items using the Q key.  ";
-        const guideText4 = "  - You can run using the Shift key.  ";
-        const guideText5 = "  - You can upgrade your towers using the money you earn.  ";
-        const guideText6 = "  - You can unlock new towers by clearing levels.  ";
-        const guideText7 = "  - You can use cheat codes to unlock all levels.  ";
+        const guideText1 = "  Pick up seeds and place them on your ground.  ";
+        const guideText2 = "  You have 90 seconds to prevent your farm      ";
+        const guideText3 = "  from being destroyed.                         ";
+        const guideText4 = "  Once you destory all the monsters, you can    ";
+        const guideText5 = "  move on to the next level.                    ";
+        const guideText6 = "  You can upgrade your turrets using the money  ";
+        const guideText7 = "  you earn. (Not implemented yet)               ";
 
         const guideLine1 = <Label>this.add.uiElement(UIElementType.LABEL, "guide", {position: new Vec2(center.x, center.y - 350), text: guideText1});
         const guideLine2 = <Label>this.add.uiElement(UIElementType.LABEL, "guide", {position: new Vec2(center.x, center.y - 300), text: guideText2});
@@ -262,13 +268,13 @@ export default class MainMenu extends Scene {
         const guideLine5 = <Label>this.add.uiElement(UIElementType.LABEL, "guide", {position: new Vec2(center.x, center.y - 150), text: guideText5});
         const guideLine6 = <Label>this.add.uiElement(UIElementType.LABEL, "guide", {position: new Vec2(center.x, center.y - 100), text: guideText6});
         const guideLine7 = <Label>this.add.uiElement(UIElementType.LABEL, "guide", {position: new Vec2(center.x, center.y - 50), text: guideText7});
-        guideLine1.textColor = Color.WHITE; guideLine1.fontSize = 22;
-        guideLine2.textColor = Color.WHITE; guideLine2.fontSize = 22;
-        guideLine3.textColor = Color.WHITE; guideLine3.fontSize = 22;
-        guideLine4.textColor = Color.WHITE; guideLine4.fontSize = 22;
-        guideLine5.textColor = Color.WHITE; guideLine5.fontSize = 22;
-        guideLine6.textColor = Color.WHITE; guideLine6.fontSize = 22;
-        guideLine7.textColor = Color.WHITE; guideLine7.fontSize = 22;
+        guideLine1.textColor = Color.WHITE; guideLine1.fontSize = 24;
+        guideLine2.textColor = Color.WHITE; guideLine2.fontSize = 24;
+        guideLine3.textColor = Color.WHITE; guideLine3.fontSize = 24;
+        guideLine4.textColor = Color.WHITE; guideLine4.fontSize = 24;
+        guideLine5.textColor = Color.WHITE; guideLine5.fontSize = 24;
+        guideLine6.textColor = Color.WHITE; guideLine6.fontSize = 24;
+        guideLine7.textColor = Color.WHITE; guideLine7.fontSize = 24;
 
         const guideBack = this.add.uiElement(UIElementType.BUTTON, "guide", {position: new Vec2(center.x, center.y + 400), text: "Back"});
         (guideBack as Label).setTextColor(Color.WHITE);
@@ -393,22 +399,34 @@ export default class MainMenu extends Scene {
     public handleEvent(event: GameEvent): void {
         switch(event.type) {
             case "play": {
+                // Play the click sound
+                this.emitter.fireEvent("play_sound", {key: "click", loop: false, holdReference: false});
+
                 this.mainMenu.setHidden(true);
                 this.level.setHidden(false);
                 // this.sceneManager.changeToScene(MainScene);
                 break;
             }
             case "control": {
+                // Play the click sound
+                this.emitter.fireEvent("play_sound", {key: "click", loop: false, holdReference: false});
+                
                 this.mainMenu.setHidden(true);
                 this.controls.setHidden(false);
                 break;
             }
             case "help": {
+                // Play the click sound
+                this.emitter.fireEvent("play_sound", {key: "click", loop: false, holdReference: false});
+                
                 this.mainMenu.setHidden(true);
                 this.help.setHidden(false);
                 break;
             }
             case "menu": {
+                // Play the click sound
+                this.emitter.fireEvent("play_sound", {key: "click", loop: false, holdReference: false});
+                
                 this.controls.setHidden(true);
                 this.guide.setHidden(true);
                 this.level.setHidden(true);
@@ -417,32 +435,53 @@ export default class MainMenu extends Scene {
                 break;
             }
             case "guide": {
+                // Play the click sound
+                this.emitter.fireEvent("play_sound", {key: "click", loop: false, holdReference: false});
+                
                 this.mainMenu.setHidden(true);
                 this.guide.setHidden(false);
                 break;
             }
             case "level1": {
+                // Play the click sound
+                this.emitter.fireEvent("play_sound", {key: "click", loop: false, holdReference: false});
+                
                 console.log("1레벨 진입");
                 this.sceneManager.changeToScene(Level1);
                 break;
             }
             case "level2": {
+                // Play the click sound
+                this.emitter.fireEvent("play_sound", {key: "click", loop: false, holdReference: false});
+                
                 this.sceneManager.changeToScene(Level2);
                 break;
             }
             case "level3": {
+                // Play the click sound
+                this.emitter.fireEvent("play_sound", {key: "click", loop: false, holdReference: false});
+                
                 this.sceneManager.changeToScene(Level3);
                 break;
             }
             case "level4": {
+                // Play the click sound
+                this.emitter.fireEvent("play_sound", {key: "click", loop: false, holdReference: false});
+                
                 this.sceneManager.changeToScene(Level4);
                 break;
             }
             case "level5": {
+                // Play the click sound
+                this.emitter.fireEvent("play_sound", {key: "click", loop: false, holdReference: false});
+                
                 this.sceneManager.changeToScene(Level5);
                 break;
             }
             case "level6": {
+                // Play the click sound
+                this.emitter.fireEvent("play_sound", {key: "click", loop: false, holdReference: false});
+                
                 this.sceneManager.changeToScene(Level6);
                 break;
             }

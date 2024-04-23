@@ -162,12 +162,12 @@ export default class Level1 extends Scene {
         this.load.image("pearl", "fd_assets/sprites/pearl.png");
 
         // Load the sounds
-        this.load.audio("background_music", "fd_assets/sounds/level1.wav");
+        this.load.audio("background_music", "fd_assets/sounds/level1.mp3");
         this.load.audio("level_clear", "fd_assets/sounds/level_clear.mp3");
         this.load.audio("pause", "fd_assets/sounds/pause.mp3");
         this.load.audio("night_start", "fd_assets/sounds/night_start.mp3");
 
-        this.load.audio("pick_up", "fd_assets/sounds/item_pick_up.wav");
+        this.load.audio("pick_up", "fd_assets/sounds/item_pick_up.mp3");
         this.load.audio("drop", "fd_assets/sounds/item_drop.mp3");
         this.load.audio("monster_attack", "fd_assets/sounds/monster_attack.mp3");
 
@@ -176,7 +176,6 @@ export default class Level1 extends Scene {
         this.load.audio("peach_attack", "fd_assets/sounds/peach.mp3");
         this.load.audio("watermelon_attack", "fd_assets/sounds/watermelon.mp3");
         this.load.audio("tomato_attack", "fd_assets/sounds/tomato.mp3");
-
     }
 
     /**
@@ -426,7 +425,7 @@ export default class Level1 extends Scene {
         if (this.blueEnemyCount === 0 && this.night) {
             // Play level clear sound
             // Reduce the sound volume
-            this.emitter.fireEvent("play_sound", {key: "level_clear", loop: false, holdReference: false, volume: 0.001});
+            this.emitter.fireEvent("play_sound", {key: "level_clear", loop: false, holdReference: false});
 
             // Output the screen message: You have survived the night!
             const nightBackground = new Rect(new Vec2(180, 180), new Vec2(220, 180));
@@ -440,7 +439,8 @@ export default class Level1 extends Scene {
             // Proceed to the next level after 3 seconds
             setTimeout(() => {
                 MainMenu.maxLevelUnlocked = Math.max(MainMenu.maxLevelUnlocked, 2);
-                this.sceneManager.changeToScene(Level2);
+                this.sceneManager.changeToScene(MainMenu);
+                // this.sceneManager.changeToScene(Level2);
             }, 3000);
         }
 
@@ -688,16 +688,16 @@ export default class Level1 extends Scene {
         // If attack is a monster
         if (attacker.type === "monster") {
             // Play monster attack sound
-            this.emitter.fireEvent("play_sound", {key: "monster_attack", loop: false, holdReference: false, volume: 0.2});
+            this.emitter.fireEvent("play_sound", {key: "monster_attack", loop: false, holdReference: false});
         } else {
             if (attacker.maxHealth === 100) {
-                this.emitter.fireEvent("play_sound", {key: "tomato_attack", loop: false, holdReference: false, volume: 0.2});
+                this.emitter.fireEvent("play_sound", {key: "tomato_attack", loop: false, holdReference: false});
             } else if (attacker.maxHealth === 150) {
-                this.emitter.fireEvent("play_sound", {key: "watermelon_attack", loop: false, holdReference: false, volume: 0.2});
+                this.emitter.fireEvent("play_sound", {key: "watermelon_attack", loop: false, holdReference: false});
             } else if (attacker.maxHealth === 200) {
-                this.emitter.fireEvent("play_sound", {key: "peach_attack", loop: false, holdReference: false, volume: 0.2});
+                this.emitter.fireEvent("play_sound", {key: "peach_attack", loop: false, holdReference: false});
             } else {
-                this.emitter.fireEvent("play_sound", {key: "lemon_attack", loop: false, holdReference: false, volume: 0.2});
+                this.emitter.fireEvent("play_sound", {key: "lemon_attack", loop: false, holdReference: false});
             }
         }
     }
