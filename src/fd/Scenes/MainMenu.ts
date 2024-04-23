@@ -6,6 +6,7 @@ import Color from "../../Wolfie2D/Utils/Color";
 import Label from "../../Wolfie2D/Nodes/UIElements/Label";
 import Level1 from "./Level1";
 import GameEvent from "../../Wolfie2D/Events/GameEvent";
+import { GameEventType } from "../../Wolfie2D/Events/GameEventType";
 import Input from "../../Wolfie2D/Input/Input";
 import Button from "../../Wolfie2D/Nodes/UIElements/Button";
 import Rect from "../../Wolfie2D/Nodes/Graphics/Rect"; 
@@ -445,8 +446,6 @@ export default class MainMenu extends Scene {
             case "level1": {
                 // Play the click sound
                 this.emitter.fireEvent("play_sound", {key: "click", loop: false, holdReference: false});
-                // Stop playing the background music
-                this.emitter.fireEvent("stop_sound", {key: "bgm"});
 
                 this.sceneManager.changeToScene(Level1);
                 break;
@@ -454,8 +453,6 @@ export default class MainMenu extends Scene {
             case "level2": {
                 // Play the click sound
                 this.emitter.fireEvent("play_sound", {key: "click", loop: false, holdReference: false});
-                // Stop playing the background music
-                this.emitter.fireEvent("stop_sound", {key: "bgm"});
                 
                 this.sceneManager.changeToScene(Level2);
                 break;
@@ -463,39 +460,38 @@ export default class MainMenu extends Scene {
             case "level3": {
                 // Play the click sound
                 this.emitter.fireEvent("play_sound", {key: "click", loop: false, holdReference: false});
-                // Stop playing the background music
-                this.emitter.fireEvent("stop_sound", {key: "bgm"});
-                
+
                 this.sceneManager.changeToScene(Level3);
                 break;
             }
             case "level4": {
                 // Play the click sound
                 this.emitter.fireEvent("play_sound", {key: "click", loop: false, holdReference: false});
-                // Stop playing the background music
-                this.emitter.fireEvent("stop_sound", {key: "bgm"});
-                
+
                 this.sceneManager.changeToScene(Level4);
                 break;
             }
             case "level5": {
                 // Play the click sound
                 this.emitter.fireEvent("play_sound", {key: "click", loop: false, holdReference: false});
-                // Stop playing the background music
-                this.emitter.fireEvent("stop_sound", {key: "bgm"});
-                
+
                 this.sceneManager.changeToScene(Level5);
                 break;
             }
             case "level6": {
                 // Play the click sound
                 this.emitter.fireEvent("play_sound", {key: "click", loop: false, holdReference: false});
-                // Stop playing the background music
-                this.emitter.fireEvent("stop_sound", {key: "bgm"});
                 
                 this.sceneManager.changeToScene(Level6);
                 break;
             }
         }
+        
     }
+
+    unloadScene(): void {
+        // The scene is being destroyed, so we can stop playing the song
+        this.emitter.fireEvent(GameEventType.STOP_SOUND, {key: "bgm"});
+    }
+    
 }

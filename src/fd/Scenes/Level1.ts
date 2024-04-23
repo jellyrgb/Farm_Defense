@@ -184,6 +184,8 @@ export default class Level1 extends Scene {
     public override startScene() {
         // Play level1 background music
         this.emitter.fireEvent("play_sound", {key: "background_music", loop: true, holdReference: true});
+        // Stop playing main menu bgm
+        this.emitter.fireEvent("stop_sound", {key: "bgm"});
 
         const center = this.viewport.getCenter();
 
