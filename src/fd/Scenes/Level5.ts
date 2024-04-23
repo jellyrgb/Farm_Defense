@@ -27,6 +27,8 @@ import InventoryHUD from "../GameSystems/HUD/InventoryHUD";
 import Inventory from "../GameSystems/ItemSystem/Inventory";
 import Item from "../GameSystems/ItemSystem/Item";
 import Seed from "../GameSystems/ItemSystem/Items/Seed";
+import Pearl from "../GameSystems/ItemSystem/Items/pearl";
+import Shop from "../GameSystems/ItemSystem/Items/Shop";
 import { ClosestPositioned } from "../GameSystems/Searching/Reducers";
 import BasicTargetable from "../GameSystems/Targeting/BasicTargetable";
 import Position from "../GameSystems/Targeting/Position";
@@ -41,10 +43,10 @@ import Rect from "../../Wolfie2D/Nodes/Graphics/Rect";
 import TextInput from "../../Wolfie2D/Nodes/UIElements/TextInput";
 import TurretBehavior from "../AI/NPC/NPCBehavior/TurretBehavior";
 import BaseBehavior from "../AI/NPC/NPCBehavior/BaseBehavior";
-import Level2 from "../Scenes/Level2";
-import Level3 from "../Scenes/Level3";
-import Level4 from "../Scenes/Level4";
-import Level5 from "../Scenes/Level5";
+import Level1 from "../Scenes/Level1";
+import Level2 from "../Scenes/Level3";
+import Level3 from "../Scenes/Level4";
+import Level4 from "../Scenes/Level5";
 import Level6 from "../Scenes/Level6"; 
 import GameOver from "./GameOver";
 
@@ -53,7 +55,7 @@ const BattlerGroups = {
     ENEMY: 2
 } as const;
 
-export default class Level1 extends Scene {
+export default class Level5 extends Scene {
 
     /** GameSystems in the Scene */
     private inventoryHud: InventoryHUD;
@@ -63,9 +65,12 @@ export default class Level1 extends Scene {
     /** Healthbars for the battlers */
     private healthbars: Map<number, HealthbarHUD>;
 
-    private bases: BattlerBase[];
-
     private seeds: Array<Seed>;
+    private pearls: Array<Pearl>;
+
+    private shop: Shop;
+    private dollar: number;
+    private shopMenu: Layer;
 
     // The wall layer of the tilemap
     private walls: OrthogonalTilemap;
@@ -93,11 +98,9 @@ export default class Level1 extends Scene {
     private levelEnded: boolean;
 
     private baseId: number;
+    private shopId: number;
 
     private enemyCountLabel: Label;
-    
-    // List of turrets waiting to be spawned
-    private turretWaiting: Array<NPCActor>;
 
     public constructor(viewport: Viewport, sceneManager: SceneManager, renderingManager: RenderingManager, options: Record<string, any>) {
         super(viewport, sceneManager, renderingManager, options);
@@ -106,9 +109,7 @@ export default class Level1 extends Scene {
         this.healthbars = new Map<number, HealthbarHUD>();
 
         this.seeds = new Array<Seed>();
-
-        // Initialize turretWaiting list as an empty array
-        this.turretWaiting = new Array<NPCActor>();
+        this.pearls = new Array<Pearl>();
     }
 
     /**
@@ -121,8 +122,8 @@ export default class Level1 extends Scene {
 
         // Load in the enemy sprites
         this.load.spritesheet("monsterA", "fd_assets/spritesheets/monsterA.json");
-        this.load.spritesheet("monsterB", "fd_assets/spritesheets/monsterB.json");
-        this.load.spritesheet("monsterC", "fd_assets/spritesheets/monsterC.json");
+        // this.load.spritesheet("monsterB", "fd_assets/spritesheets/monsterB.json");
+        // this.load.spritesheet("monsterC", "fd_assets/spritesheets/monsterC.json");
 
         // Load turret sprites
         this.load.spritesheet("turretA", "fd_assets/spritesheets/turretA.json");
@@ -144,19 +145,21 @@ export default class Level1 extends Scene {
 
         // Load the tilemap
         this.load.tilemap("level1", "fd_assets/tilemaps/level1.json");
-        this.load.tilemap("level1_night", "fd_assets/tilemaps/level1_night.json");
 
         // Load the enemy locations
         this.load.object("enemy_location", "fd_assets/data/enemies/enemy_location.json");
-        this.load.object("home_location", "fd_assets/data/enemies/home_location.json")
 
         // Load the seed locations
         this.load.object("seeds", "fd_assets/data/items/seeds.json");
+        this.load.object("shop", "fd_assets/data/items/shop.json");
+        this.load.object("pearls", "fd_assets/data/items/pearls.json");
 
         // Load the image sprites
         this.load.image("seed", "fd_assets/sprites/seed.png");
         this.load.image("inventorySlot", "fd_assets/sprites/inventory.png");
         this.load.image("timer", "fd_assets/sprites/moon.png");
+        this.load.image("shop", "fd_assets/sprites/shop.png");
+        this.load.image("pearl", "fd_assets/sprites/pearl.png");
     }
 
     /**
@@ -169,7 +172,31 @@ export default class Level1 extends Scene {
         this.levelEnded = false;
         let enemy = this.load.getObject("enemy_location");
         this.blueEnemyCount = enemy.enemies.length;
+        
+        // Initialize the shop
+        this.shopMenu = this.addUILayer("shop");
+        this.shopMenu.setHidden(true);
 
+        const shopLayer = this.getLayer("shop");
+        const centerShop = new Vec2(200, 200);
+
+        const shopBackground = new Rect(new Vec2(centerShop.x - 25, centerShop.y - 25), new Vec2(200, 200));
+        shopBackground.color = new Color(0, 0, 0, 0.9);
+        shopBackground.borderColor = new Color(255, 255, 255);
+        shopBackground.borderWidth = 2;
+        shopLayer.addNode(shopBackground);
+
+        const buyButton = this.add.uiElement(UIElementType.BUTTON, "shop", {position: new Vec2(centerShop.x - 25, centerShop.y - 65),text: "Buy"});
+        buyButton.size.set(60, 60);
+        buyButton.onClickEventId = "buy";
+
+        const sellButton = this.add.uiElement(UIElementType.BUTTON, "shop", {position: new Vec2(centerShop.x - 25, centerShop.y - 25),text: "Sell"});
+        sellButton.size.set(60, 60);
+        sellButton.onClickEventId = "sell";
+
+        const exitButton = this.add.uiElement(UIElementType.BUTTON, "shop", {position: new Vec2(centerShop.x - 25, centerShop.y + 15), text: "Exit"});
+        exitButton.size.set(60, 60);
+        exitButton.onClickEventId = "exitShop";
 
         // pause menu initialize
         this.pauseMenu = this.addUILayer("pauseMenu");
@@ -178,23 +205,23 @@ export default class Level1 extends Scene {
         const pauseMenuLayer = this.getLayer("pauseMenu");
         const centerESC = new Vec2(200, 200);
 
-        const menuBackground = new Rect(new Vec2(centerESC.x - 25, centerESC.y - 25), new Vec2(300, 300));
+        const menuBackground = new Rect(new Vec2(centerESC.x - 25, centerESC.y - 25), new Vec2(150, 150));
         menuBackground.color = new Color(0, 0, 0, 0.9);
         menuBackground.borderColor = new Color(255, 255, 255);
         menuBackground.borderWidth = 2;
         pauseMenuLayer.addNode(menuBackground);
 
         // Create buttons
-        const resumeButton = this.add.uiElement(UIElementType.BUTTON, "pauseMenu", {position: new Vec2(centerESC.x - 25, centerESC.y - 95),text: "Resume"});
-        resumeButton.size.set(100, 100);
+        const resumeButton = this.add.uiElement(UIElementType.BUTTON, "pauseMenu", {position: new Vec2(centerESC.x - 25, centerESC.y - 65),text: "Resume"});
+        resumeButton.size.set(60, 60);
         resumeButton.onClickEventId = "resumeGame";
 
         const cheatButton = this.add.uiElement(UIElementType.BUTTON, "pauseMenu", {position: new Vec2(centerESC.x - 25, centerESC.y - 25),text: "Cheat Code"});
-        cheatButton.size.set(100, 100);
+        cheatButton.size.set(60, 60);
         cheatButton.onClickEventId = "cheat";
 
-        const mainMenuButton = this.add.uiElement(UIElementType.BUTTON, "pauseMenu", {position: new Vec2(centerESC.x - 25, centerESC.y + 50),text: "Main Menu"});
-        mainMenuButton.size.set(100, 100);
+        const mainMenuButton = this.add.uiElement(UIElementType.BUTTON, "pauseMenu", {position: new Vec2(centerESC.x - 25, centerESC.y + 15),text: "Main Menu"});
+        mainMenuButton.size.set(60, 60);
         mainMenuButton.onClickEventId = "backToMainMenu";
         
         // Cheat text input
@@ -203,26 +230,28 @@ export default class Level1 extends Scene {
 
         const textInputLayer = this.getLayer("textInput");
 
-        const background = new Rect(new Vec2(centerESC.x - 25, centerESC.y - 25), new Vec2(500, 200));
+        const background = new Rect(new Vec2(centerESC.x - 25, centerESC.y - 25), new Vec2(270, 200));
         background.color = new Color(0, 0, 0);
         background.borderColor = new Color(255, 255, 255);
         background.borderWidth = 2;
         textInputLayer.addNode(background);
 
         const inputText = this.add.uiElement(UIElementType.TEXT_INPUT, "textInput", {position: new Vec2(centerESC.x - 60 , centerESC.y - 30)});
-        inputText.size.set(600, 100);
+        inputText.size.set(400, 80);
 
-        const submitButton = this.add.uiElement(UIElementType.BUTTON, "textInput", {position: new Vec2(300, 170),text: "Submit"});
+        const submitButton = this.add.uiElement(UIElementType.BUTTON, "textInput", {position: new Vec2(255, 170), text: "Submit"});
         submitButton.onClickEventId = "submitCheat";
         submitButton.backgroundColor = Color.TRANSPARENT;
-        submitButton.size.set(100, 50);
+        submitButton.size.set(90, 40);
 
         this.receiver.subscribe("resumeGame");
         this.receiver.subscribe("backToMainMenu");
         this.receiver.subscribe("cheat");
         this.receiver.subscribe("submitCheat");
         this.receiver.subscribe("growFinish");
-        this.receiver.subscribe(CooldownEvent.COOLDOWN_MESSAGE);
+        this.receiver.subscribe("exitShop");
+        this.receiver.subscribe("buy");
+        this.receiver.subscribe("sell");
 
 
         // Add in the tilemap
@@ -250,6 +279,9 @@ export default class Level1 extends Scene {
         // Create the NPCS
         this.initializeNPCs();
 
+        // Make sure every characters are behind "leaves" layer
+        this.getLayer("primary").setDepth(0);
+        this.getLayer("leaves").setDepth(1);
 
         this.enemyCount = this.addUILayer("enemyCount");
         this.enemyCount.setHidden(false);
@@ -270,11 +302,11 @@ export default class Level1 extends Scene {
         const moonPhoto = this.add.sprite("timer", "timer");
         moonPhoto.position.set(155,10);
 
-        const timerLabel = this.add.uiElement(UIElementType.LABEL, "timer", { position: new Vec2(180, 10), text: "2:01" });
+        const timerLabel = this.add.uiElement(UIElementType.LABEL, "timer", { position: new Vec2(180, 10), text: "1:30" });
         (timerLabel as Label).setTextColor(Color.WHITE);
         (timerLabel as Label).fontSize = 24;
     
-        let dayDuration = 60;
+        let dayDuration = 90;
         let interval = setInterval(() => {
             let minutes = Math.floor(dayDuration / 60);
             let seconds = dayDuration % 60;
@@ -315,8 +347,10 @@ export default class Level1 extends Scene {
         this.addUILayer("health");
 
         this.receiver.subscribe(PlayerEvent.PLAYER_KILLED);
+        this.receiver.subscribe(PlayerEvent.SHOP_ENTERED);
         this.receiver.subscribe(BattlerEvent.BATTLER_KILLED);
         this.receiver.subscribe(BattlerEvent.BATTLER_RESPAWN);
+        this.receiver.subscribe(CooldownEvent.COOLDOWN_MESSAGE);
     }
 
     /**
@@ -327,8 +361,18 @@ export default class Level1 extends Scene {
             this.handleEvent(this.receiver.getNextEvent());
         }
 
+        // If the player collides with the shop, emit an event
+        let player1 = this.battlers.find(b => b instanceof PlayerActor) as PlayerActor;
+        if (player1 && player1.position.distanceTo(this.shop.position) < 20) {
+            this.emitter.fireEvent(PlayerEvent.SHOP_ENTERED, {});
+        }
+
         for (let i = 0; i < this.battlers.length; i++) {
             for (let j = i + 1; j < this.battlers.length; j++) {
+                if (this.battlers[i].id === this.baseId || this.battlers[j].id === this.baseId) {
+                    continue;
+                }
+
                 // If they are same type of battlers and they are colliding
                 if (this.battlers[i].battleGroup === this.battlers[j].battleGroup &&
                     this.collides(this.battlers[i], this.battlers[j])) {
@@ -339,11 +383,12 @@ export default class Level1 extends Scene {
         }
 
         this.updateEnemyCountLabel();
+
         // Esc menu 
         if (Input.isKeyJustPressed("escape")) {       
             this.pause();
             this.togglePauseMenu();
-            if(!this.textInput.isHidden()){
+            if (!this.textInput.isHidden()) {
                 this.CheatInput();
             }
         }
@@ -355,10 +400,9 @@ export default class Level1 extends Scene {
 
         
         if (this.blueEnemyCount === 0 && this.night) {
-            
             // Output the screen message: You have survived the night!
             const nightBackground = new Rect(new Vec2(180, 180), new Vec2(220, 180));
-            nightBackground.color = new Color(0, 0, 0, 0.6);
+            nightBackground.color = new Color(0, 0, 0, 0.5);
             this.enemyCount.addNode(nightBackground);
 
             let message = this.add.uiElement(UIElementType.LABEL, "enemyCount", {position: new Vec2(180, 180), text: "You have survived the night!"});
@@ -367,14 +411,14 @@ export default class Level1 extends Scene {
 
             // Proceed to the next level after 3 seconds
             setTimeout(() => {
-                MainMenu.maxLevelUnlocked = Math.max(MainMenu.maxLevelUnlocked, 2);
-                this.sceneManager.changeToScene(Level2);
+                MainMenu.maxLevelUnlocked = Math.max(MainMenu.maxLevelUnlocked, 6);
+                this.sceneManager.changeToScene(Level6);
             }, 3000);
         }
 
         let player = this.battlers.find(b => b instanceof PlayerActor) as PlayerActor;
         if (Input.isKeyJustPressed("y")){
-            console.log(" 플레이어 위치 :", player.position.x , player.position.y);
+            console.log("Player Pos:", player.position.x , player.position.y);
         }
     }
     private updateEnemyCountLabel() {
@@ -437,6 +481,28 @@ export default class Level1 extends Scene {
         }
     }
 
+    private toggleShopMenu(): void {
+        const requestedLayer = this.getLayer("shop");
+        const isHidden = requestedLayer.isHidden();
+
+        if (!isHidden) {
+            requestedLayer.setHidden(true);
+            console.log("Shop is now hidden")
+        } 
+        else {
+            requestedLayer.setHidden(false);
+            console.log("Shop is now not hidden")
+        }
+    }
+
+    private handleBuy(event: GameEvent): void {
+        console.log("Implemented Soon!");
+    }
+
+    private handleSell(event: GameEvent): void {
+        console.log("Implemented Soon!!");
+    }
+
     private CheatInput(): void {
         const textInputLayer = this.getLayer("textInput");
         const isHidden = textInputLayer.isHidden();
@@ -455,7 +521,10 @@ export default class Level1 extends Scene {
     
     public handleCheatSubmission(cheatCode: string): void {
         let player = this.battlers.find(b => b instanceof PlayerActor) as PlayerActor;
-        console.log("치트코드 진행 : ", cheatCode);
+        console.log("Cheat code handling: ", cheatCode);
+        if(cheatCode == "1"){
+            this.sceneManager.changeToScene(Level1);
+        }
         if(cheatCode == "2"){
             this.sceneManager.changeToScene(Level2);
         }
@@ -465,9 +534,6 @@ export default class Level1 extends Scene {
         if(cheatCode == "4"){
             this.sceneManager.changeToScene(Level4);
         }
-        if(cheatCode == "5"){
-            this.sceneManager.changeToScene(Level5);
-        }
         if(cheatCode == "6") {
             this.sceneManager.changeToScene(Level6);
         }
@@ -476,11 +542,9 @@ export default class Level1 extends Scene {
         }
         if(cheatCode == "INVISIBLE"){
             player.visible = false;
-            console.log("플레이어 안보임")
         }
         if(cheatCode == "VISIBLE"){
             player.visible = true;
-            console.log("플레이어 보임 ");
         }
 
     }
@@ -508,11 +572,10 @@ export default class Level1 extends Scene {
                 break;
             }
             case "submitCheat": {
-                console.log("치트코드 제출");
                 const textInputLayer = this.getLayer("textInput");
                 const textInputNode = textInputLayer.getItems().find(node => node instanceof TextInput) as TextInput;
                 if (textInputNode) {
-                    console.log("Entered cheat code:", textInputNode.text);
+                    console.log("Cheat code submitted:", textInputNode.text);
                     this.handleCheatSubmission(textInputNode.text);
                     textInputNode.text = "";
                 }
@@ -521,9 +584,26 @@ export default class Level1 extends Scene {
 
             case ItemEvent.FINISH_GROW_UP: {
                 if (this.turret) {
-                    console.log("성장 끝, 보통 모션 출력");
                     this.turret.animation.play("IDLE", true);
                 }
+                break;
+            }
+
+            // Shop Events
+            case PlayerEvent.SHOP_ENTERED: {
+                this.handleShopEntered(event);
+                break;
+            }
+            case "exitShop": {
+                this.toggleShopMenu();
+                break;
+            }
+            case "buy": {
+                this.handleBuy(event);
+                break;
+            }
+            case "sell": {
+                this.handleSell(event);
                 break;
             }
 
@@ -574,6 +654,14 @@ export default class Level1 extends Scene {
             return item.inventory === null && item.position.distanceTo(node.position) <= 20;
         });
 
+        let pearls: Item[] = new Array<Item>(...this.pearls).filter((item: Item) => {
+            return item.inventory === null && item.position.distanceTo(node.position) <= 20;
+        });
+
+        if (pearls.length > 0) {
+            inventory.add(pearls.reduce(ClosestPositioned(node)));
+        }
+
         if (items.length > 0) {
             inventory.add(items.reduce(ClosestPositioned(node)));
         }
@@ -581,52 +669,78 @@ export default class Level1 extends Scene {
 
     protected handleItemGrowUp(event: GameEvent): void {
         let item = event.data.get("item");
+        
         let name = "";
         let health = 0;
+        let itemType = "";
+        let itemStar = "";
 
         if (item.st === 1) {
             name = "turretA";
             health = 100;
+            itemType = "tomato";
+            itemStar = "normal";
         } else if (item.st === 2) {
             name = "turretAS";
             health = 100;
+            itemType = "tomato";
+            itemStar = "silver";
         } else if (item.st === 2) {
             name = "turretAG";
             health = 100;
+            itemType = "tomato";
+            itemStar = "gold";
         } else if (item.st === 4) {
             name = "turretB";
-            health = 100;
+            health = 150;
+            itemType = "watermelon";
+            itemStar = "normal";
         } else if (item.st === 5) {
             name = "turretBS";
-            health = 100;
+            health = 150;
+            itemType = "watermelon";
+            itemStar = "silver";
         } else if (item.st === 6) {
             name = "turretBG";
-            health = 100;
+            health = 150;
+            itemType = "watermelon";
+            itemStar = "gold";
         } else if (item.st === 7) {
             name = "turretC";
-            health = 100;
+            health = 200;
+            itemType = "peach";
+            itemStar = "normal";
         } else if (item.st === 8) {
             name = "turretCS";
-            health = 100;
+            health = 200;
+            itemType = "peach";
+            itemStar = "silver";
         } else if (item.st === 9) {
             name = "turretCG";
-            health = 100;
+            health = 200;
+            itemType = "peach";
+            itemStar = "gold";
         } else if (item.st === 10) {
             name = "turretD";
-            health = 100;
+            health = 250;
+            itemType = "lemon";
+            itemStar = "normal";
         } else if (item.st === 11) {
             name = "turretDS";
-            health = 100;
+            health = 250;
+            itemType = "lemon";
+            itemStar = "silver";
         } else {
             name = "turretDG";
-            health = 100;
+            health = 250;
+            itemType = "lemon";
+            itemStar = "gold";
         }
         
         let turret = this.add.animatedSprite(NPCActor, name, "primary");
         this.turret = turret;
    
         turret.animation.play("GROW_UP", false, ItemEvent.FINISH_GROW_UP);
-        console.log("성장 모션");
 
         turret.position.set(item.position.x, item.position.y);
         turret.addPhysics(new AABB(Vec2.ZERO, new Vec2(7, 7)), null, false);
@@ -643,10 +757,20 @@ export default class Level1 extends Scene {
         this.healthbars.set(turret.id, healthbar);
 
         setTimeout(() => {
-            turret.addAI(TurretBehavior, {target: this.battlers[0], range: 150});
+            turret.addAI(TurretBehavior, {target: this.battlers[0], range: 150, type: itemType, star: itemStar});
             this.battlers.push(turret);
             this.turret = turret;
         }, 4000);
+    }
+
+    protected handleShopEntered(event: GameEvent): void {
+        // If the shop UI Layer is already open, do nothing
+        if (this.getLayer("shop").isHidden() === false) {
+            return;
+        }
+
+        // Open the shop UI Layer
+        this.toggleShopMenu();
     }
 
     protected handleItemPickedUp(event: GameEvent): void {
@@ -655,7 +779,6 @@ export default class Level1 extends Scene {
         let node = event.data.get("node");
         
         inventory.add(item);
-        console.log(inventory);
     }
 
     protected handleItemDropped(event: GameEvent, node: GameNode, inventory: Inventory): void {
@@ -665,36 +788,31 @@ export default class Level1 extends Scene {
         let col = item.position.x;
         let row = item.position.y;
         let tile = this.floors.getTilemapPosition(col, row);
-        console.log(tile);
 
-        // 위쪽 밭
-        if (tile.y >= 2 && tile.y <= 11) {
-            // If tile.x is not 0, 1, 5, 6, 10, 11, 15, 16, 20, 21, 25, 26, 30, 31
-            if (tile.x % 5 !== 0 && tile.x % 5 !== 1) {
+        // Upper land
+        if (tile.y >= 9 && tile.y <= 13) {
+            // If tile.x is 2~14 or 18~29
+            if ((tile.x >= 2 && tile.x <= 14) || (tile.x >= 18 && tile.x <= 29)) {
                 // Emit an event to make the item grow up
                 inventory.remove(item);
-                console.log("제거된 아이템 ID : ", item.id);
                 
                 item.getSprite().destroy();
 
                 this.seeds = this.seeds.filter(seed => seed !== item);
-                console.log("새로운 씨앗 배열 :", this.seeds);
                 this.emitter.fireEvent(ItemEvent.ITEM_GROW_UP, {item: item});
             }
         }
 
-        // 아래쪽 밭
-        if (tile.y >= 17 && tile.y <= 20) {
-            // If tile.x is 1~14 or 18~30
-            if (tile.x >= 1 && tile.x <= 14 || tile.x >= 18 && tile.x <= 30) {
+        // Lower land
+        if (tile.y >= 15 && tile.y <= 19) {
+            // If tile.x is 2~14 or 18~29
+            if ((tile.x >= 2 && tile.x <= 14) || (tile.x >= 18 && tile.x <= 29)) {
                 // Emit an event to make the item grow up
                 inventory.remove(item);
-                console.log("제거된 아이템 ID : ", item.id);
                 
                 item.getSprite().destroy();
 
                 this.seeds = this.seeds.filter(seed => seed !== item);
-                console.log("새로운 씨앗 배열 :", this.seeds);
                 this.emitter.fireEvent(ItemEvent.ITEM_GROW_UP, {item: item});
             }
         }
@@ -704,13 +822,13 @@ export default class Level1 extends Scene {
     protected showCooldownMessage(remainingTime: string): void {
         const uiLayer = this.getLayer("enemyCount");
 
-        const background = new Rect(new Vec2(180, 180), new Vec2(170, 25));
+        const background = new Rect(new Vec2(180, 180), new Vec2(240, 25));
         background.color = new Color(0, 0, 0, 0.4);
         uiLayer.addNode(background);
 
         const message = this.add.uiElement(UIElementType.LABEL, "enemyCount", {
             position: new Vec2(180, 180),
-            text: `Need ${remainingTime} seconds to planting`
+            text: `Wait ${remainingTime} seconds to plant another seed.`
         });
         (message as Label).setTextColor(Color.WHITE);
         (message as Label).fontSize = 24;
@@ -750,8 +868,8 @@ export default class Level1 extends Scene {
         this.addLayer("primary", 10);
         this.addUILayer("items");
         this.addUILayer("slots");
-        this.getLayer("slots").setDepth(1);
-        this.getLayer("items").setDepth(2);
+        this.getLayer("slots").setDepth(2);
+        this.getLayer("items").setDepth(3);
     }
 
     /**
@@ -761,14 +879,14 @@ export default class Level1 extends Scene {
         let player = this.add.animatedSprite(PlayerActor, "player", "primary");
         
         // Position of Kevin
-        player.position.set(263, 286);
+        player.position.set(264, 227);
         player.battleGroup = 1;
         player.health = 10;
         player.maxHealth = 10;
 
         player.inventory.onChange = ItemEvent.INVENTORY_CHANGED
-        console.log(this.getLayer("slots").getDepth());
-        console.log(this.getLayer("items").getDepth());
+        // console.log(this.getLayer("slots").getDepth());
+        // console.log(this.getLayer("items").getDepth());
         this.inventoryHud = new InventoryHUD(this, player.inventory, "inventorySlot", {
             start: new Vec2(232, 998),
             slotLayer: "slots",
@@ -797,46 +915,43 @@ export default class Level1 extends Scene {
      * Initialize the NPCs 
      */
     protected initializeNPCs(): void {
-        let home = this.load.getObject("home_location");
-
         // Initialize the base (home)
-        for (let i = 0; i < home.enemies.length; i++) {
-            let baseNPC = this.add.animatedSprite(NPCActor, "home", "primary");
-            baseNPC.position.set(home.enemies[i][0], home.enemies[i][1]);
-            baseNPC.addPhysics(new AABB(Vec2.ZERO, new Vec2(7, 7)), null, false);
+        let baseNPC = this.add.animatedSprite(NPCActor, "home", "primary");
+        baseNPC.position.set(264, 95);
+        baseNPC.addPhysics(new AABB(Vec2.ZERO, new Vec2(7, 7)), null, false);
 
-            // Give the NPCS their healthbars
-            let healthbar = new HealthbarHUD(this, baseNPC, "primary", {size: baseNPC.size.clone().scaled(2, 1/2), offset: baseNPC.size.clone().scaled(0, -1/2)});
-            this.healthbars.set(baseNPC.id, healthbar);
+        // Give the NPCS their healthbars
+        let healthbar = new HealthbarHUD(this, baseNPC, "primary", {size: baseNPC.size.clone().scaled(4, 1/2), offset: baseNPC.size.clone().scaled(0, -1/2)});
+        this.healthbars.set(baseNPC.id, healthbar);
 
-            this.baseId = baseNPC.id;
+        this.baseId = baseNPC.id;
 
-            baseNPC.type = "base";
-            baseNPC.battleGroup = 1;
-            baseNPC.speed = 0;
-            baseNPC.health = 100;
-            baseNPC.maxHealth = 100;
-            baseNPC.navkey = "navmesh";
+        baseNPC.type = "base";
+        baseNPC.battleGroup = 1;
+        baseNPC.speed = 0;
+        baseNPC.health = 1000;
+        baseNPC.maxHealth = 1000;
+        baseNPC.navkey = "navmesh";
 
-            baseNPC.addAI(BaseBehavior);
-            baseNPC.animation.play("IDLE");
-            this.battlers.push(baseNPC);
-        }
+        baseNPC.addAI(BaseBehavior);
+        baseNPC.animation.play("IDLE");
+        this.battlers.push(baseNPC);
 
-        let waveTime = 10000;
+        // Initialize the monsters
+        let waveTime = 90000;
 
         setTimeout(() => {
-            // Output the screen message in the player's head: "The night has arrived"
+            // Output the screen message: The night has arrived...
             const nightBackground = new Rect(new Vec2(0, 0), new Vec2(1000, 1000));
-            nightBackground.color = new Color(0, 0, 0, 0.8);
+            nightBackground.color = new Color(0, 0, 0, 0.5);
             this.enemyCount.addNode(nightBackground);
-            let message = this.add.uiElement(UIElementType.LABEL, "enemyCount", {position: new Vec2(180, 180), text: "The night has arrived"});
+            let message = this.add.uiElement(UIElementType.LABEL, "enemyCount", {position: new Vec2(180, 180), text: "The night has arrived..."});
             (message as Label).setTextColor(Color.WHITE);
             (message as Label).fontSize = 30;
             setTimeout(() => {
                 message.destroy();
                 nightBackground.color = new Color(0, 0, 0, 0.2);
-            }, 3000);
+            }, 2000);
             this.initializeMonsters();
         }, waveTime);
     }
@@ -845,7 +960,7 @@ export default class Level1 extends Scene {
         let enemy = this.load.getObject("enemy_location");
 
         for (let i = 0; i < enemy.enemies.length; i++) {
-            let npc = this.add.animatedSprite(NPCActor, "monsterB", "primary");
+            let npc = this.add.animatedSprite(NPCActor, "monsterA", "primary");
             npc.position.set(enemy.enemies[i][0], enemy.enemies[i][1]);
             npc.addPhysics(new AABB(Vec2.ZERO, new Vec2(7, 7)), null, false);
 
@@ -880,6 +995,19 @@ export default class Level1 extends Scene {
             let sprite = this.add.sprite("seed", "primary");
             this.seeds[i] = new Seed(sprite);
             this.seeds[i].position.set(seeds.items[i][0], seeds.items[i][1]);
+        }
+
+        let shop = this.load.getObject("shop");
+        let shopSprite = this.add.sprite("shop", "primary");
+        this.shop = new Shop(shopSprite, this.dollar);
+        this.shop.position.set(shop.location[0][0], shop.location[0][1]);
+
+        let pearls = this.load.getObject("pearls");
+        this.pearls = new Array<Pearl>(pearls.items.length);
+        for (let i = 0; i < pearls.items.length; i++) {
+            let sprite = this.add.sprite("pearl", "primary");
+            this.pearls[i] = new Pearl(sprite);
+            this.pearls[i].position.set(pearls.items[i][0], pearls.items[i][1]);
         }
     }
 

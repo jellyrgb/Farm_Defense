@@ -410,6 +410,8 @@ export default class MainMenu extends Scene {
             }
             case "menu": {
                 this.controls.setHidden(true);
+                this.guide.setHidden(true);
+                this.level.setHidden(true);
                 this.help.setHidden(true);
                 this.mainMenu.setHidden(false);
                 break;
