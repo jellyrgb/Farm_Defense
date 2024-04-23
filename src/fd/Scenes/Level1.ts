@@ -27,7 +27,7 @@ import InventoryHUD from "../GameSystems/HUD/InventoryHUD";
 import Inventory from "../GameSystems/ItemSystem/Inventory";
 import Item from "../GameSystems/ItemSystem/Item";
 import Seed from "../GameSystems/ItemSystem/Items/Seed";
-import Pearl from "../GameSystems/ItemSystem/Items/pearl";
+import Pearl from "../GameSystems/ItemSystem/Items/Pearl";
 import Shop from "../GameSystems/ItemSystem/Items/Shop";
 import { ClosestPositioned } from "../GameSystems/Searching/Reducers";
 import BasicTargetable from "../GameSystems/Targeting/BasicTargetable";
