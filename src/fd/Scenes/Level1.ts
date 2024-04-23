@@ -323,11 +323,11 @@ export default class Level1 extends Scene {
         const moonPhoto = this.add.sprite("timer", "timer");
         moonPhoto.position.set(155,10);
 
-        const timerLabel = this.add.uiElement(UIElementType.LABEL, "timer", { position: new Vec2(180, 10), text: "1:30" });
+        const timerLabel = this.add.uiElement(UIElementType.LABEL, "timer", { position: new Vec2(180, 10), text: "1:00" });
         (timerLabel as Label).setTextColor(Color.WHITE);
         (timerLabel as Label).fontSize = 24;
     
-        let dayDuration = 90;
+        let dayDuration = 60;
         let interval = setInterval(() => {
             let minutes = Math.floor(dayDuration / 60);
             let seconds = dayDuration % 60;
@@ -1004,7 +1004,7 @@ export default class Level1 extends Scene {
         this.battlers.push(baseNPC);
 
         // Initialize the monsters
-        let waveTime = 90000;
+        let waveTime = 60000;
 
         setTimeout(() => {
             // Play the night start sound
