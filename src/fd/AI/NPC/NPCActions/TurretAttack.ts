@@ -9,7 +9,7 @@ import NPCBehavior from "../NPCBehavior";
 import NPCAction from "./NPCAction";
 import { ItemEvent } from "../../../Events";
 import Timer from "../../../../Wolfie2D/Timing/Timer";
-import { BattlerEvent } from "../../../Events";
+import { BattlerEvent, ShopEvent } from "../../../Events";
 
 export default class TurretAttack extends NPCAction {
 
@@ -17,7 +17,7 @@ export default class TurretAttack extends NPCAction {
     protected atk: number;
     protected cooldown: number;
     
-    public constructor(parent: NPCBehavior, actor: NPCActor, type: string, star: string) {
+    public constructor(parent: NPCBehavior, actor: NPCActor, type: string, star: string, upgrade: boolean) {
         super(parent, actor);
         this._target = null;
         
@@ -68,6 +68,9 @@ export default class TurretAttack extends NPCAction {
         }
 
         this.timer = new Timer(this.cooldown);
+        if (upgrade) {
+            this.atk *= 1.1;
+        }
     }
 
     public performAction(target: TargetableEntity): void {

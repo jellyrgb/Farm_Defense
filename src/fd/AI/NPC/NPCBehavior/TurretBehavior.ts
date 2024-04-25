@@ -14,6 +14,7 @@ import GoapAction from "../../../../Wolfie2D/AI/Goap/GoapAction";
 import GoapState from "../../../../Wolfie2D/AI/Goap/GoapState";
 import Battler from "../../../GameSystems/BattleSystem/Battler";
 import TurretAttack from "../NPCActions/TurretAttack";
+import { ShopEvent } from "../../../Events";
 
 
 export default class TurretBehavior extends NPCBehavior {
@@ -24,6 +25,7 @@ export default class TurretBehavior extends NPCBehavior {
     protected range: number;
     protected type: string;
     protected star: string;
+    protected upgrade: boolean;
 
     /** Initialize the NPC AI */
     public initializeAI(owner: NPCActor, options: TurretOptions): void {
@@ -34,6 +36,7 @@ export default class TurretBehavior extends NPCBehavior {
         this.range = options.range;
         this.type = options.type;
         this.star = options.star;
+        this.upgrade = false;
 
         // Initialize statuses
         this.initializeStatuses();
@@ -44,10 +47,15 @@ export default class TurretBehavior extends NPCBehavior {
 
         // Initialize the behavior
         this.initialize();
+
+        this.receiver.subscribe(ShopEvent.TURRET_UPGRADED);
     }
 
     public handleEvent(event: GameEvent): void {
         switch(event.type) {
+            case ShopEvent.TURRET_UPGRADED: {
+                this.upgrade = true;
+            }
             default: {
                 super.handleEvent(event);
                 break;
@@ -75,7 +83,7 @@ export default class TurretBehavior extends NPCBehavior {
         let scene = this.owner.getScene();
 
         // An action for attacking enemy in the scene
-        let attack = new TurretAttack(this, this.owner, this.type, this.star);
+        let attack = new TurretAttack(this, this.owner, this.type, this.star, this.upgrade);
         attack.targets = scene.getBattlers();
         attack.targetFinder = new BasicFinder<Battler>(ClosestPositioned(this.owner), BattlerActiveFilter(), EnemyFilter(this.owner), RangeFilter(this.target, 0, this.range*this.range));
         attack.addPrecondition(TurretStatuses.TARGETABLE_ENEMY_EXISTS);

@@ -33,6 +33,7 @@ export default class MainMenu extends Scene {
         this.load.image("title", "fd_assets/sprites/title.png");
         this.load.image("splash", "fd_assets/sprites/splash.png");
         this.load.image("backgroundImage", "fd_assets/sprites/background.png");
+        this.load.image("buttonImage", "fd_assets/sprites/button.png");
 
         this.load.audio("bgm", "fd_assets/sounds/main_menu_music.mp3");
         this.load.audio("click", "fd_assets/sounds/main_menu_button.mp3");
@@ -40,7 +41,7 @@ export default class MainMenu extends Scene {
 
     public startScene(){
         // Play the background music
-        this.emitter.fireEvent("play_sound", {key: "bgm", loop: true, holdReference: false});
+        this.emitter.fireEvent("play_sound", {key: "bgm", loop: false, holdReference: false});
 
         const center = this.viewport.getCenter();
 
@@ -74,27 +75,28 @@ export default class MainMenu extends Scene {
         title.position.set(center.x, center.y - 330);
 
 
-        const backgroundStart = new Rect(new Vec2(center.x , center.y - 170), new Vec2(300, 90));
-        backgroundStart.color = this.steelBlue;
-        backgroundStart.borderWidth = 2;
-        backgroundStart.borderColor = this.steelBlueBorder;
-        this.mainMenu.addNode(backgroundStart);
+        const startImage = this.add.sprite("buttonImage", "mainMenu");
+        startImage.position.set(center.x - 10 , center.y - 170)
+
+        const ctrlImage = this.add.sprite("buttonImage", "mainMenu");
+        ctrlImage.position.set(center.x - 10 , center.y - 30)
+
+        const guideImage = this.add.sprite("buttonImage", "mainMenu");
+        guideImage.position.set(center.x - 10 , center.y + 110)
+
+        const infoImage = this.add.sprite("buttonImage", "mainMenu");
+        infoImage.position.set(center.x - 10 , center.y + 250)
 
         // Game Start
         const play = this.add.uiElement(UIElementType.BUTTON, "mainMenu", {position: new Vec2(center.x, center.y - 170), text: "Game Start"});
         (play as Label).setTextColor(Color.WHITE);
+        (play as Label).fontSize = 30;
         console.log((play as Label).getFontString())
         play.size.set(300, 100);
         play.borderWidth = 2;
         play.backgroundColor = Color.TRANSPARENT;
         play.onClickEventId = "play";
 
-        // Controls
-        const backControl = new Rect(new Vec2(center.x , center.y - 30), new Vec2(300, 90));
-        backControl.color = this.steelBlue
-        backControl.borderWidth = 2;
-        backControl.borderColor = this.steelBlueBorder;
-        this.mainMenu.addNode(backControl);
 
         // Add Controls button
         const controls = this.add.uiElement(UIElementType.BUTTON, "mainMenu", {position: new Vec2(center.x, center.y - 30), text: "Controls"});
@@ -104,12 +106,6 @@ export default class MainMenu extends Scene {
         controls.backgroundColor = Color.TRANSPARENT;
         controls.onClickEventId = "control";
 
-        // Guide
-        const backGuide = new Rect(new Vec2(center.x , center.y + 110), new Vec2(300, 90));
-        backGuide.color = this.steelBlue;
-        backGuide.borderWidth = 2;
-        backGuide.borderColor = this.steelBlueBorder;
-        this.mainMenu.addNode(backGuide);
 
         // Add Guide button
         const guide = this.add.uiElement(UIElementType.BUTTON, "mainMenu", {position: new Vec2(center.x, center.y + 110), text: "Guide"});
@@ -118,13 +114,6 @@ export default class MainMenu extends Scene {
         guide.borderWidth = 0;
         guide.backgroundColor = Color.TRANSPARENT;
         guide.onClickEventId = "guide";
-
-        // Info
-        const backInfo = new Rect(new Vec2(center.x , center.y + 250), new Vec2(300, 90));
-        backInfo.color = this.steelBlue;
-        backInfo.borderWidth = 2;
-        backInfo.borderColor = this.steelBlueBorder;
-        this.mainMenu.addNode(backInfo);
 
         // Add Info button
         const info = this.add.uiElement(UIElementType.BUTTON, "mainMenu", {position: new Vec2(center.x, center.y + 250), text: "Info"});
@@ -260,7 +249,10 @@ export default class MainMenu extends Scene {
         const guideText4 = "  Once you destory all the monsters, you can    ";
         const guideText5 = "  move on to the next level.                    ";
         const guideText6 = "  You can upgrade your turrets using the money  ";
-        const guideText7 = "  you earn. (Not implemented yet)               ";
+        const guideText7 = "  you earn.                                     ";
+        const guideText8 = "  Turrets with silver and gold stars are        ";
+        const guideText9 = "  stronger than the normal ones.                ";
+        const guideText10 = "  Tomato < Watermelon < Peach < Lemon            ";
 
         const guideLine1 = <Label>this.add.uiElement(UIElementType.LABEL, "guide", {position: new Vec2(center.x, center.y - 350), text: guideText1});
         const guideLine2 = <Label>this.add.uiElement(UIElementType.LABEL, "guide", {position: new Vec2(center.x, center.y - 300), text: guideText2});
@@ -269,6 +261,9 @@ export default class MainMenu extends Scene {
         const guideLine5 = <Label>this.add.uiElement(UIElementType.LABEL, "guide", {position: new Vec2(center.x, center.y - 150), text: guideText5});
         const guideLine6 = <Label>this.add.uiElement(UIElementType.LABEL, "guide", {position: new Vec2(center.x, center.y - 100), text: guideText6});
         const guideLine7 = <Label>this.add.uiElement(UIElementType.LABEL, "guide", {position: new Vec2(center.x, center.y - 50), text: guideText7});
+        const guideLine8 = <Label>this.add.uiElement(UIElementType.LABEL, "guide", {position: new Vec2(center.x, center.y), text: guideText8});
+        const guideLine9 = <Label>this.add.uiElement(UIElementType.LABEL, "guide", {position: new Vec2(center.x, center.y + 50), text: guideText9});
+        const guideLine10 = <Label>this.add.uiElement(UIElementType.LABEL, "guide", {position: new Vec2(center.x, center.y + 100), text: guideText10});
         guideLine1.textColor = Color.WHITE; guideLine1.fontSize = 24;
         guideLine2.textColor = Color.WHITE; guideLine2.fontSize = 24;
         guideLine3.textColor = Color.WHITE; guideLine3.fontSize = 24;
@@ -276,6 +271,9 @@ export default class MainMenu extends Scene {
         guideLine5.textColor = Color.WHITE; guideLine5.fontSize = 24;
         guideLine6.textColor = Color.WHITE; guideLine6.fontSize = 24;
         guideLine7.textColor = Color.WHITE; guideLine7.fontSize = 24;
+        guideLine8.textColor = Color.WHITE; guideLine8.fontSize = 24;
+        guideLine9.textColor = Color.WHITE; guideLine9.fontSize = 24;
+        guideLine10.textColor = Color.WHITE; guideLine10.fontSize = 24;
 
         const guideBack = this.add.uiElement(UIElementType.BUTTON, "guide", {position: new Vec2(center.x, center.y + 400), text: "Back"});
         (guideBack as Label).setTextColor(Color.WHITE);
