@@ -41,7 +41,7 @@ export default class MainMenu extends Scene {
 
     public startScene(){
         // Play the background music
-        this.emitter.fireEvent("play_sound", {key: "bgm", loop: false, holdReference: false});
+        // this.emitter.fireEvent("play_sound", {key: "bgm", loop: false, holdReference: false});
 
         const center = this.viewport.getCenter();
 
@@ -347,10 +347,10 @@ export default class MainMenu extends Scene {
         const Cheat = <Label>this.add.uiElement(UIElementType.LABEL, "help", {position: new Vec2(center.x, center.y + 110), text: "Cheat Codes"});
         Cheat.textColor = Color.CYAN;
 
-        const cheat1 = "SHOWMETHEMONEY : Money Max"
-        const cheat2 = "ATTACK : Damage Max"
-        const cheat3 = "IMNOTHURT : Defense Max"
-        const cheat4 = "UNlOCK : Unlock all levels"
+        const cheat1 = "A single number: Level Select";
+        const cheat2 = "UNLOCK: Unlock all levels";
+        const cheat3 = "INVISIBLE: Become invisible";
+        const cheat4 = "VISIBLE: Become visible";
 
         const cheatname1 = <Label>this.add.uiElement(UIElementType.LABEL, "help", {position: new Vec2(center.x, center.y + 160), text: cheat1});
         const cheatname2 = <Label>this.add.uiElement(UIElementType.LABEL, "help", {position: new Vec2(center.x, center.y + 200), text: cheat2});
@@ -489,7 +489,7 @@ export default class MainMenu extends Scene {
 
     unloadScene(): void {
         // The scene is being destroyed, so we can stop playing the song
-        this.emitter.fireEvent(GameEventType.STOP_SOUND, {key: "bgm"});
+        // this.emitter.fireEvent(GameEventType.STOP_SOUND, {key: "bgm"});
     }
     
 }

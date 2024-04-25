@@ -997,11 +997,30 @@ export default class Level1 extends Scene {
         this.emitter.fireEvent("play_sound", {key: "drop", loop: false, holdReference: false});
 
         let item = event.data.get("item");
-                
+
+        // If item is not a seed, just drop it and remove from the inventory
+        if (item instanceof Pearl) {
+            inventory.remove(item.id);
+            item.position.set(node.position.x, node.position.y);
+            return;
+        }
+
         // Get the col and row of the tile that the item is dropped
         let col = item.position.x;
         let row = item.position.y;
         let tile = this.floors.getTilemapPosition(col, row);
+        let turrets = this.battlers.filter(b => b instanceof NPCActor && b.battleGroup === BattlerGroups.TURRET);
+        // let turret =  this.battlers.filter(b => b instanceof NPCActor && b.battleGroup === BattlerGroups.TURRET).length - 1;
+
+        let isTooCloseToTurrets = turrets.some(turret => {
+            let turretTile = this.floors.getTilemapPosition(turret.position.x, turret.position.y);
+            return Math.abs(turretTile.x - tile.x) <= 2 && Math.abs(turretTile.y - tile.y) <= 2;
+        });
+    
+        if (isTooCloseToTurrets) {
+            this.closeMessage();
+            return; 
+        }
 
         // Upper land
         if (tile.y >= 9 && tile.y <= 13) {
@@ -1031,6 +1050,26 @@ export default class Level1 extends Scene {
             }
         }
         
+    }
+
+    protected closeMessage(): void {
+        const uiLayer = this.getLayer("enemyCount");
+
+        const background = new Rect(new Vec2(180, 180), new Vec2(240, 25));
+        background.color = new Color(0, 0, 0, 0.4);
+        uiLayer.addNode(background);
+
+        const message = this.add.uiElement(UIElementType.LABEL, "enemyCount", {
+            position: new Vec2(180, 180),
+            text: "Turrets are too close !"
+        });
+        (message as Label).setTextColor(Color.WHITE);
+        (message as Label).fontSize = 24;
+
+        setTimeout(() => {
+            message.destroy();
+            background.color = new Color(0,0,0,0);
+        }, 1000);
     }
 
     protected showCooldownMessage(remainingTime: string): void {
@@ -1145,8 +1184,8 @@ export default class Level1 extends Scene {
         baseNPC.type = "base";
         baseNPC.battleGroup = 1;
         baseNPC.speed = 0;
-        baseNPC.health = 1000;
-        baseNPC.maxHealth = 1000;
+        baseNPC.health = 100;
+        baseNPC.maxHealth = 100;
         baseNPC.navkey = "navmesh";
 
         baseNPC.addAI(BaseBehavior);
@@ -1190,8 +1229,8 @@ export default class Level1 extends Scene {
             npc.type = "monster";
             npc.battleGroup = 2;
             npc.speed = 10;
-            npc.health = 50;
-            npc.maxHealth = 50;
+            npc.health = 100;
+            npc.maxHealth = 100;
             npc.navkey = "navmesh";
 
             // Give the NPCs their AI
@@ -1341,5 +1380,9 @@ export default class Level1 extends Scene {
         }
         return true;
 
+    }
+
+    public unloadScene(): void {
+        this.emitter.fireEvent("stop_sound", {key: "background_music"});
     }
 }
