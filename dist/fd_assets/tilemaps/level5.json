@@ -302,11 +302,11 @@
         {
          "columns":6,
          "firstgid":1,
-         "image":"spring.png",
+         "image":"fall.png",
          "imageheight":112,
          "imagewidth":96,
          "margin":0,
-         "name":"level1",
+         "name":"level5",
          "spacing":0,
          "tilecount":42,
          "tileheight":16,

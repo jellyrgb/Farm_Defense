@@ -857,11 +857,10 @@ export default class Level1 extends Scene {
                 console.log("Option 1 selected");
 
                 if (this.money >= this.price[0]) {
-                    this.money -= this.price[0];
-                    this.price[0] += 10;
                     // this.emitter.fireEvent("play_sound", {key: "purchase", loop: false, holdReference: false});
                     this.emitter.fireEvent(ShopEvent.TURRET_UPGRADED, {});
                     this.emitter.fireEvent(ShopEvent.BOUGHT_ITEM, {price: this.price[0]});
+                    this.price[0] += 10;
 
                     // Remove the existing price label
                     const oldPriceLabel = this.getLayer("buy").getItems().find(node => node.id === this.option1priceId) as Label;
@@ -886,10 +885,9 @@ export default class Level1 extends Scene {
                 console.log("Option 2 selected");
 
                 if (this.money >= this.price[1]) {
-                    this.money -= this.price[1];
-                    this.price[1] += 10;
                     // this.emitter.fireEvent(ShopEvent.GOLD_CHANCE_UPGRADE, {});
                     this.emitter.fireEvent(ShopEvent.BOUGHT_ITEM, {price: this.price[1]});
+                    this.price[1] += 10;
 
                     // Remove the existing price label
                     const oldPriceLabel = this.getLayer("buy").getItems().find(node => node.id === this.option2priceId) as Label;
@@ -914,10 +912,9 @@ export default class Level1 extends Scene {
                 console.log("Option 3 selected");
 
                 if (this.money >= this.price[2]) {
-                    this.money -= this.price[2];
-                    this.price[2] += 10;
                     this.emitter.fireEvent(ShopEvent.BASE_UPGRADED, {});
                     this.emitter.fireEvent(ShopEvent.BOUGHT_ITEM, {price: this.price[2]});
+                    this.price[2] += 10;
                     
                     // Remove the existing price label
                     const oldPriceLabel = this.getLayer("buy").getItems().find(node => node.id === this.option3priceId) as Label;
@@ -940,14 +937,11 @@ export default class Level1 extends Scene {
             }
             case ShopEvent.OPTION_FOUR_SELECTED: {
                 console.log("Option 4 selected");
-                console.log("Current money: ", this.money);
-                console.log("Current price: ", this.price[3]);
 
                 if (this.money >= this.price[3]) {
-                    this.money -= this.price[3];
-                    this.price[3] += 10;
                     this.emitter.fireEvent(ShopEvent.GET_NEW_SEED, {});
                     this.emitter.fireEvent(ShopEvent.BOUGHT_ITEM, {price: this.price[3]});
+                    this.price[3] += 10;
 
                     // Remove the existing price label
                     const oldPriceLabel = this.getLayer("buy").getItems().find(node => node.id === this.option4priceId) as Label;
@@ -965,9 +959,6 @@ export default class Level1 extends Scene {
                     
                     this.option4priceId = newPriceLabel.id;
                 }
-
-                console.log("New money: ", this.money);
-                console.log("New price: ", this.price[3]);
 
                 break;
             }
