@@ -57,6 +57,12 @@ const BattlerGroups = {
 
 export default class Level1 extends Scene {
 
+    /** Level change variables */
+    private monsterType: string;
+    private monsterHealth: number;
+    private monsterMaxHealth: number;
+    private monsterSpeed: number;
+
     /** GameSystems in the Scene */
     private inventoryHud: InventoryHUD;
 
@@ -101,7 +107,7 @@ export default class Level1 extends Scene {
     private baseId: number;
     private turret: NPCActor;
 
-    /** 샵 바이 테스트용 */
+    /** Attributes for shop buying menu */
     private option1priceId: number;
     private option2priceId: number;
     private option3priceId: number;
@@ -118,6 +124,11 @@ export default class Level1 extends Scene {
 
         this.money = 30;
         this.price = [30, 20, 10, 10];
+
+        this.monsterHealth = 100;
+        this.monsterMaxHealth = 100;
+        this.monsterType = "monsterB";
+        this.monsterSpeed = 10;
     }
 
     /**
@@ -129,9 +140,9 @@ export default class Level1 extends Scene {
         this.load.spritesheet("home", "fd_assets/spritesheets/home.json");
 
         // Load in the enemy sprites
-        // this.load.spritesheet("monsterA", "fd_assets/spritesheets/monsterA.json");
+        this.load.spritesheet("monsterA", "fd_assets/spritesheets/monsterA.json");
         this.load.spritesheet("monsterB", "fd_assets/spritesheets/monsterB.json");
-        // this.load.spritesheet("monsterC", "fd_assets/spritesheets/monsterC.json");
+        this.load.spritesheet("monsterC", "fd_assets/spritesheets/monsterC.json");
 
         // Load turret sprites
         this.load.spritesheet("turretA", "fd_assets/spritesheets/turretA.json");
@@ -193,7 +204,6 @@ export default class Level1 extends Scene {
     public override startScene() {
         // Play level1 background music
         this.emitter.fireEvent("play_sound", {key: "background_music", loop: true, holdReference: true});
-        // Stop playing main menu bgm
         this.emitter.fireEvent("stop_sound", {key: "bgm"});
 
         const center = this.viewport.getCenter();
@@ -201,7 +211,152 @@ export default class Level1 extends Scene {
         this.night = false;
         let enemy = this.load.getObject("enemy_location");
         this.blueEnemyCount = enemy.enemies.length;
+
+        // Add in the tilemap
+        let tilemapLayers = this.add.tilemap("level1");
+
+        // Get the wall layer
+        this.walls = <OrthogonalTilemap>tilemapLayers[1].getItems()[0];
+        this.floors = <OrthogonalTilemap>tilemapLayers[0].getItems()[0];
+
+        // Set the viewport bounds to the tilemap
+        let tilemapSize: Vec2 = this.walls.size;
+
+        this.viewport.setBounds(0, 0, tilemapSize.x, tilemapSize.y);
+        this.viewport.setZoomLevel(3);
+
+        this.initLayers();
+        this.initializePlayer();
+        this.initializeItems();
+        this.initializeNavmesh();
+        this.initializeNPCs();
+        this.initializeShopLayer();
+        this.initializePauseLayer();
+
+        // Make sure every characters are behind "leaves" layer
+        this.getLayer("primary").setDepth(0);
+        this.getLayer("leaves").setDepth(1);
+
+        // Add enemy count HUD
+        this.enemyCount = this.addUILayer("enemyCount");
+        this.enemyCount.setHidden(false);
+
+        const monsterPhoto = this.add.sprite("monsterBLogo", "enemyCount");
+        monsterPhoto.position.set(300, 10);
+
+        this.enemyCountLabel = <Label>this.add.uiElement(UIElementType.LABEL, "enemyCount", {
+            position: new Vec2(324, 10),
+            text: "x " + this.blueEnemyCount
+        });
+        this.enemyCountLabel.setTextColor(Color.WHITE);
+        this.enemyCountLabel.fontSize = 24;
+
+        // Add money HUD
+        this.moneyLayer = this.addUILayer("moneyLayer");
+        this.moneyLayer.setHidden(false);
+
+        const dollar = this.add.sprite("coin", "moneyLayer");
+        dollar.position.set(300, 28);
+
+        const dollarText = this.add.uiElement(UIElementType.LABEL, "moneyLayer", {
+            position: new Vec2(324, 28),
+            text: ""+ this.money
+        });
+        (dollarText as Label).setTextColor(Color.WHITE);
+        (dollarText as Label).fontSize = 24;
+
+        // Add level timer HUD
+        this.timer = this.addUILayer("timer");
+        this.timer.setHidden(false);
+
+        const moonPhoto = this.add.sprite("timer", "timer");
+        moonPhoto.position.set(155,10);
+
+        const timerLabel = this.add.uiElement(UIElementType.LABEL, "timer", { position: new Vec2(180, 10), text: "1:00" });
+        (timerLabel as Label).setTextColor(Color.WHITE);
+        (timerLabel as Label).fontSize = 24;
+    
+        let dayDuration = 60;
+        let interval = setInterval(() => {
+            let minutes = Math.floor(dayDuration / 60);
+            let seconds = dayDuration % 60;
+
+            // Pad the seconds with leading zeros
+            let secondsString = String(seconds).padStart(2, '0');
+
+            if (timerLabel) {
+                (timerLabel as Label).setText(`${minutes}:${secondsString}`);
+            }
         
+            if (dayDuration <= 0) {
+                clearInterval(interval);
+                if (timerLabel) {
+                    (timerLabel as Label).setText(" ");
+                    setTimeout(() => {
+                        if (timerLabel) {
+                            timerLabel.destroy();
+                            this.timer.setHidden(true);
+                        }
+                    }, 1000);
+                }
+                this.night = true;
+            }
+            dayDuration -= 1;
+        }, 1000)
+
+
+        // Subscribe to relevant events
+        this.receiver.subscribe("enemyDied");
+        this.receiver.subscribe(ItemEvent.ITEM_REQUEST);
+        this.receiver.subscribe(ItemEvent.ITEM_GROW_UP);
+        this.receiver.subscribe(ItemEvent.ITEM_PICKED_UP);
+        this.receiver.subscribe(ItemEvent.ITEM_DROPPED);
+        this.receiver.subscribe(ItemEvent.FINISH_GROW_UP);
+
+        // Add a UI for health
+        this.addUILayer("health");
+
+        this.receiver.subscribe(PlayerEvent.PLAYER_KILLED);
+        this.receiver.subscribe(PlayerEvent.SHOP_ENTERED);
+
+        this.receiver.subscribe(ShopEvent.OPTION_ONE_SELECTED);
+        this.receiver.subscribe(ShopEvent.OPTION_TWO_SELECTED);
+        this.receiver.subscribe(ShopEvent.OPTION_THREE_SELECTED);
+        this.receiver.subscribe(ShopEvent.OPTION_FOUR_SELECTED);
+
+        this.receiver.subscribe(ShopEvent.BOUGHT_ITEM);
+        this.receiver.subscribe(ShopEvent.BASE_UPGRADED);
+        this.receiver.subscribe(ShopEvent.GET_NEW_SEED);
+
+        this.receiver.subscribe(BattlerEvent.BATTLER_KILLED);
+        this.receiver.subscribe(BattlerEvent.BATTLER_RESPAWN);
+        this.receiver.subscribe(BattlerEvent.BATTLER_ATTACK);
+        this.receiver.subscribe(CooldownEvent.COOLDOWN_MESSAGE);
+
+        // Text form events
+        this.receiver.subscribe("resumeGame");
+        this.receiver.subscribe("backToMainMenu");
+        this.receiver.subscribe("cheat");
+        this.receiver.subscribe("submitCheat");
+        this.receiver.subscribe("growFinish");
+        this.receiver.subscribe("exitShop");
+        this.receiver.subscribe("buy");
+        this.receiver.subscribe("sell");
+        this.receiver.subscribe("exitBuy");
+        this.receiver.subscribe("exitSell");
+    }
+
+    /** Initializes the layers in the scene */
+    protected initLayers(): void {
+        this.addLayer("primary", 10);
+        this.addUILayer("items");
+        this.addUILayer("slots");
+        this.getLayer("slots").setDepth(2);
+        this.getLayer("items").setDepth(3);
+    }
+
+    /** Create the shop layer */
+    protected initializeShopLayer(): void {
         // Initialize the shop
         this.shopMenu = this.addUILayer("shop");
         this.shopMenu.setHidden(true);
@@ -319,9 +474,10 @@ export default class Level1 extends Scene {
         option4.onClickEventId = ShopEvent.OPTION_FOUR_SELECTED;
 
         exit.onClickEventId = "exitBuy";
+    }
 
-
-        // pause menu initialize
+    /** Create the pause menu layer */
+    protected initializePauseLayer(): void {
         this.pauseMenu = this.addUILayer("pauseMenu");
         this.pauseMenu.setHidden(true);
     
@@ -366,142 +522,6 @@ export default class Level1 extends Scene {
         submitButton.onClickEventId = "submitCheat";
         submitButton.backgroundColor = Color.TRANSPARENT;
         submitButton.size.set(90, 40);
-
-        this.receiver.subscribe("resumeGame");
-        this.receiver.subscribe("backToMainMenu");
-        this.receiver.subscribe("cheat");
-        this.receiver.subscribe("submitCheat");
-        this.receiver.subscribe("growFinish");
-        this.receiver.subscribe("exitShop");
-        this.receiver.subscribe("buy");
-        this.receiver.subscribe("sell");
-        this.receiver.subscribe("exitBuy");
-        this.receiver.subscribe("exitSell");
-
-
-        // Add in the tilemap
-        let tilemapLayers = this.add.tilemap("level1");
-
-        // Get the wall layer
-        this.walls = <OrthogonalTilemap>tilemapLayers[1].getItems()[0];
-        this.floors = <OrthogonalTilemap>tilemapLayers[0].getItems()[0];
-
-        // Set the viewport bounds to the tilemap
-        let tilemapSize: Vec2 = this.walls.size;
-
-        this.viewport.setBounds(0, 0, tilemapSize.x, tilemapSize.y);
-        this.viewport.setZoomLevel(3);
-
-        this.initLayers();
-        
-        // Create the player
-        this.initializePlayer();
-
-        // Create items
-        this.initializeItems();
-
-        this.initializeNavmesh();
-
-        // Create the NPCS
-        this.initializeNPCs();
-
-        // Make sure every characters are behind "leaves" layer
-        this.getLayer("primary").setDepth(0);
-        this.getLayer("leaves").setDepth(1);
-
-        this.enemyCount = this.addUILayer("enemyCount");
-        this.enemyCount.setHidden(false);
-
-        const monsterPhoto = this.add.sprite("monsterBLogo", "enemyCount");
-        monsterPhoto.position.set(300, 10);
-
-        this.enemyCountLabel = <Label>this.add.uiElement(UIElementType.LABEL, "enemyCount", {
-            position: new Vec2(324, 10),
-            text: "x " + this.blueEnemyCount
-        });
-        this.enemyCountLabel.setTextColor(Color.WHITE);
-        this.enemyCountLabel.fontSize = 24;
-
-        this.moneyLayer = this.addUILayer("moneyLayer");
-        this.moneyLayer.setHidden(false);
-
-        // Indicate current this.dollar
-        const dollar = this.add.sprite("coin", "moneyLayer");
-        dollar.position.set(300, 28);
-
-        const dollarText = this.add.uiElement(UIElementType.LABEL, "moneyLayer", {
-            position: new Vec2(324, 28),
-            text: ""+ this.money
-        });
-        (dollarText as Label).setTextColor(Color.WHITE);
-        (dollarText as Label).fontSize = 24;
-
-        this.timer = this.addUILayer("timer");
-        this.timer.setHidden(false);
-
-        const moonPhoto = this.add.sprite("timer", "timer");
-        moonPhoto.position.set(155,10);
-
-        const timerLabel = this.add.uiElement(UIElementType.LABEL, "timer", { position: new Vec2(180, 10), text: "1:00" });
-        (timerLabel as Label).setTextColor(Color.WHITE);
-        (timerLabel as Label).fontSize = 24;
-    
-        let dayDuration = 60;
-        let interval = setInterval(() => {
-            let minutes = Math.floor(dayDuration / 60);
-            let seconds = dayDuration % 60;
-
-            // Pad the seconds with leading zeros
-            let secondsString = String(seconds).padStart(2, '0');
-
-            if (timerLabel) {
-                (timerLabel as Label).setText(`${minutes}:${secondsString}`);
-            }
-        
-            if (dayDuration <= 0) {
-                clearInterval(interval);
-                if (timerLabel) {
-                    (timerLabel as Label).setText(" ");
-                    setTimeout(() => {
-                        if (timerLabel) {
-                            timerLabel.destroy();
-                            this.timer.setHidden(true);
-                        }
-                    }, 1000);
-                }
-                this.night = true;
-            }
-            dayDuration -= 1;
-        }, 1000)
-
-
-        // Subscribe to relevant events
-        this.receiver.subscribe("enemyDied");
-        this.receiver.subscribe(ItemEvent.ITEM_REQUEST);
-        this.receiver.subscribe(ItemEvent.ITEM_GROW_UP);
-        this.receiver.subscribe(ItemEvent.ITEM_PICKED_UP);
-        this.receiver.subscribe(ItemEvent.ITEM_DROPPED);
-        this.receiver.subscribe(ItemEvent.FINISH_GROW_UP);
-
-        // Add a UI for health
-        this.addUILayer("health");
-
-        this.receiver.subscribe(PlayerEvent.PLAYER_KILLED);
-        this.receiver.subscribe(PlayerEvent.SHOP_ENTERED);
-
-        this.receiver.subscribe(ShopEvent.OPTION_ONE_SELECTED);
-        this.receiver.subscribe(ShopEvent.OPTION_TWO_SELECTED);
-        this.receiver.subscribe(ShopEvent.OPTION_THREE_SELECTED);
-        this.receiver.subscribe(ShopEvent.OPTION_FOUR_SELECTED);
-
-        this.receiver.subscribe(ShopEvent.BOUGHT_ITEM);
-        this.receiver.subscribe(ShopEvent.BASE_UPGRADED);
-        this.receiver.subscribe(ShopEvent.GET_NEW_SEED);
-
-        this.receiver.subscribe(BattlerEvent.BATTLER_KILLED);
-        this.receiver.subscribe(BattlerEvent.BATTLER_RESPAWN);
-        this.receiver.subscribe(BattlerEvent.BATTLER_ATTACK);
-        this.receiver.subscribe(CooldownEvent.COOLDOWN_MESSAGE);
     }
 
     /**
@@ -512,12 +532,13 @@ export default class Level1 extends Scene {
             this.handleEvent(this.receiver.getNextEvent());
         }
 
-        // If the player collides with the shop, emit an event
+        // If the player touches the shop, emit shop open event
         let player1 = this.battlers.find(b => b instanceof PlayerActor) as PlayerActor;
         if (player1 && player1.position.distanceTo(this.shop.position) < 20) {
             this.emitter.fireEvent(PlayerEvent.SHOP_ENTERED, {});
         }
 
+        // Collision detector
         for (let i = 0; i < this.battlers.length; i++) {
             for (let j = i + 1; j < this.battlers.length; j++) {
                 if (this.battlers[i].id === this.baseId || this.battlers[j].id === this.baseId) {
@@ -552,7 +573,7 @@ export default class Level1 extends Scene {
         this.inventoryHud.update(deltaT);
         this.healthbars.forEach(healthbar => healthbar.update(deltaT));
 
-        
+        // If the level has ended
         if (this.blueEnemyCount === 0 && this.night) {
             // Play level clear sound
             // Reduce the sound volume
@@ -576,17 +597,22 @@ export default class Level1 extends Scene {
             }, 3000);
         }
 
+        // Print current player position
         let player = this.battlers.find(b => b instanceof PlayerActor) as PlayerActor;
         if (Input.isKeyJustPressed("y")){
             console.log("Player Pos:", player.position.x , player.position.y);
         }
     }
-    private updateEnemyCountLabel() {
+
+    /** Update enemy count HUD */
+    protected updateEnemyCountLabel() {
         if (this.enemyCountLabel) {
             this.enemyCountLabel.setText("x " + this.blueEnemyCount);
         }
     }
-    private preventEscape(): void {
+
+    /** Prevent the player from escaping the scene */
+    protected preventEscape(): void {
         // Prevent player escape from map
         let player = this.battlers.find(b => b instanceof PlayerActor) as PlayerActor;
         let currentPosition = player.position.clone();
@@ -616,6 +642,7 @@ export default class Level1 extends Scene {
         }
     }
 
+    /** Resolve collision when detected */
     private resolveCollision(a: Battler & Actor, b: Battler & Actor): void {
         // Since a and b are colliding, we need to move them apart
         let direction = a.position.dirTo(b.position);
@@ -628,7 +655,7 @@ export default class Level1 extends Scene {
         return a.position.distanceTo(b.position) < 20;
     }
 
-    private togglePauseMenu(): void {
+    protected togglePauseMenu(): void {
         const pauseMenuLayer = this.getLayer("pauseMenu");
         const isHidden = pauseMenuLayer.isHidden();
 
@@ -677,7 +704,8 @@ export default class Level1 extends Scene {
         }
     }
 
-    private handleSell(event: GameEvent): void {
+    /** Handle item sell event */
+    protected handleSell(event: GameEvent): void {
         // If the player has a pearl, sell it for 10 coins
         let player = this.battlers.find(b => b instanceof PlayerActor) as PlayerActor;
         let inventory = player.inventory;
@@ -711,24 +739,32 @@ export default class Level1 extends Scene {
         }
     }
     
+    /**
+     * Handle entered cheat code
+     * @param cheatCode the cheat code to handle
+     */
     public handleCheatSubmission(cheatCode: string): void {
         let player = this.battlers.find(b => b instanceof PlayerActor) as PlayerActor;
         console.log("Cheat code handling: ", cheatCode);
-        if(cheatCode == "2"){
+        if (cheatCode == "1") {
+            this.sceneManager.changeToScene(Level1);
+        }
+        if (cheatCode == "2") {
             this.sceneManager.changeToScene(Level2);
         }
-        if(cheatCode == "3"){
+        if (cheatCode == "3") {
             this.sceneManager.changeToScene(Level3);
         }
-        if(cheatCode == "4"){
+        if (cheatCode == "4") {
             this.sceneManager.changeToScene(Level4);
         }
-        if(cheatCode == "5"){
+        if (cheatCode == "5") {
             this.sceneManager.changeToScene(Level5);
         }
-        if(cheatCode == "6") {
+        if (cheatCode == "6") {
             this.sceneManager.changeToScene(Level6);
         }
+
         if(cheatCode == "UNLOCK"){
             MainMenu.maxLevelUnlocked = Math.max(MainMenu.maxLevelUnlocked, 6);
         }
@@ -738,7 +774,6 @@ export default class Level1 extends Scene {
         if(cheatCode == "VISIBLE"){
             player.visible = true;
         }
-
     }
 
     /**
@@ -933,6 +968,7 @@ export default class Level1 extends Scene {
                 break;
             }
 
+            // Shop buy events
             case ShopEvent.BASE_UPGRADED: {
                 // Heal base npc's health by 20
                 let base = this.battlers.find(b => b.id === this.baseId) as NPCActor;
@@ -963,7 +999,7 @@ export default class Level1 extends Scene {
                 break;
             }
 
-
+            // Cooldown event
             case CooldownEvent.COOLDOWN_MESSAGE: {
                 const remainingTime = event.data.get("remainingTime");  // 값을 가져올 때 get 메서드 사용
                 this.showCooldownMessage(remainingTime);
@@ -997,6 +1033,10 @@ export default class Level1 extends Scene {
         }
     }
 
+    /**
+     * Sound effect for battler attacks
+     * @param event battler attack event
+     */
     protected handleBattlerAttack(event: GameEvent): void {
         let attacker = event.data.get("attacker");
 
@@ -1035,6 +1075,10 @@ export default class Level1 extends Scene {
         }
     }
 
+    /**
+     * Handle the seed growing up event
+     * @param event 
+     */
     protected handleItemGrowUp(event: GameEvent): void {
         let item = event.data.get("item");
         
@@ -1053,7 +1097,7 @@ export default class Level1 extends Scene {
             health = 100;
             itemType = "tomato";
             itemStar = "silver";
-        } else if (item.st === 2) {
+        } else if (item.st === 3) {
             name = "turretAG";
             health = 100;
             itemType = "tomato";
@@ -1204,6 +1248,9 @@ export default class Level1 extends Scene {
         
     }
 
+    /**
+     * Print the message when the turrets installs are too close
+     */
     protected closeMessage(): void {
         const uiLayer = this.getLayer("enemyCount");
 
@@ -1224,6 +1271,10 @@ export default class Level1 extends Scene {
         }, 1000);
     }
 
+    /**
+     * Print the message when the player tries to plant another seed before the cooldown ends
+     * @param remainingTime the remaining time for the cooldown
+     */
     protected showCooldownMessage(remainingTime: string): void {
         const uiLayer = this.getLayer("enemyCount");
 
@@ -1270,15 +1321,6 @@ export default class Level1 extends Scene {
         
     }
 
-    /** Initializes the layers in the scene */
-    protected initLayers(): void {
-        this.addLayer("primary", 10);
-        this.addUILayer("items");
-        this.addUILayer("slots");
-        this.getLayer("slots").setDepth(2);
-        this.getLayer("items").setDepth(3);
-    }
-
     /**
      * Initializes the player in the scene
      */
@@ -1318,6 +1360,7 @@ export default class Level1 extends Scene {
         this.battlers.push(player);
         this.viewport.follow(player);
     }
+
     /**
      * Initialize the NPCs 
      */
@@ -1369,11 +1412,14 @@ export default class Level1 extends Scene {
         }, waveTime);
     }
 
+    /**
+     * Initialize the monsters in the scene
+     */
     protected initializeMonsters(): void {
         let enemy = this.load.getObject("enemy_location");
 
         for (let i = 0; i < enemy.enemies.length; i++) {
-            let npc = this.add.animatedSprite(NPCActor, "monsterB", "primary");
+            let npc = this.add.animatedSprite(NPCActor, this.monsterType, "primary");
             npc.position.set(enemy.enemies[i][0], enemy.enemies[i][1]);
             npc.addPhysics(new AABB(Vec2.ZERO, new Vec2(7, 7)), null, false);
 
@@ -1383,9 +1429,9 @@ export default class Level1 extends Scene {
 
             npc.type = "monster";
             npc.battleGroup = 2;
-            npc.speed = 10;
-            npc.health = 100;
-            npc.maxHealth = 100;
+            npc.speed = this.monsterSpeed;
+            npc.health = this.monsterHealth;
+            npc.maxHealth = this.monsterMaxHealth;
             npc.navkey = "navmesh";
 
             // Give the NPCs their AI
@@ -1402,6 +1448,7 @@ export default class Level1 extends Scene {
      * Initialize the items in the scene
      */
     protected initializeItems(): void {
+        // Seeds
         let seeds = this.load.getObject("seeds");
         this.seeds = new Array<Seed>(seeds.items.length);
         for (let i = 0; i < seeds.items.length; i++) {
@@ -1410,11 +1457,13 @@ export default class Level1 extends Scene {
             this.seeds[i].position.set(seeds.items[i][0], seeds.items[i][1]);
         }
 
+        // Shop
         let shop = this.load.getObject("shop");
         let shopSprite = this.add.sprite("shop", "primary");
         this.shop = new Shop(shopSprite, this.money);
         this.shop.position.set(shop.location[0][0], shop.location[0][1]);
 
+        // Pearls
         let pearls = this.load.getObject("pearls");
         this.pearls = new Array<Pearl>(pearls.items.length);
         for (let i = 0; i < pearls.items.length; i++) {
