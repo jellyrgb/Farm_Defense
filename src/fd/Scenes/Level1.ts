@@ -65,14 +65,17 @@ export default class Level1 extends Scene {
     /** Healthbars for the battlers */
     private healthbars: Map<number, HealthbarHUD>;
 
+    /** Arrays for items */
     private seeds: Array<Seed>;
     private pearls: Array<Pearl>;
 
+    /** Attributes for shop */
     private shop: Shop;
-    private currency: number;
+    private money: number;
     private shopMenu: Layer;
     private price: Array<number>;
     private buyMenu: Layer;
+    private moneyLayer: Layer;
 
     // The wall layer of the tilemap
     private walls: OrthogonalTilemap;
@@ -80,26 +83,29 @@ export default class Level1 extends Scene {
     // The position graph for the navmesh
     private graph: PositionGraph;
     
-    // pause menu layer
+    /** Pause menu layers */
     private pauseMenu: Layer;
-
     private textInput: Layer;
 
+    /** Enemycount layer */
     private blueEnemyCount: number;
-
-    private turret: NPCActor;
-
     private enemyCount : Layer;
+    private enemyCountLabel: Label;
 
     private floors: OrthogonalTilemap;
 
+    /** Level time indicators */
     private timer : Layer;
-
     private night: boolean;
 
     private baseId: number;
+    private turret: NPCActor;
 
-    private enemyCountLabel: Label;
+    /** 샵 바이 테스트용 */
+    private option1priceId: number;
+    private option2priceId: number;
+    private option3priceId: number;
+    private option4priceId: number;
 
     public constructor(viewport: Viewport, sceneManager: SceneManager, renderingManager: RenderingManager, options: Record<string, any>) {
         super(viewport, sceneManager, renderingManager, options);
@@ -110,7 +116,7 @@ export default class Level1 extends Scene {
         this.seeds = new Array<Seed>();
         this.pearls = new Array<Pearl>();
 
-        this.currency = 30;
+        this.money = 30;
         this.price = [30, 20, 10, 10];
     }
 
@@ -201,7 +207,7 @@ export default class Level1 extends Scene {
         this.shopMenu.setHidden(true);
 
         const shopLayer = this.getLayer("shop");
-        const centerShop = new Vec2(200, 200);
+        let centerShop = new Vec2(200, 200);
 
         const shopBackground = new Rect(new Vec2(centerShop.x - 25, centerShop.y - 25), new Vec2(200, 200));
         shopBackground.color = new Color(0, 0, 0, 0.9);
@@ -225,6 +231,7 @@ export default class Level1 extends Scene {
         // Buy menu initialize
         this.buyMenu = this.addUILayer("buy");
         this.buyMenu.setHidden(true);
+        centerShop = new Vec2(195, 200);
 
         const buyLayer = this.getLayer("buy");
         const buyBackground = new Rect(new Vec2(centerShop.x - 25, centerShop.y - 25), new Vec2(320, 250));
@@ -232,13 +239,6 @@ export default class Level1 extends Scene {
         buyBackground.borderColor = new Color(255, 255, 255);
         buyBackground.borderWidth = 2;
         buyLayer.addNode(buyBackground);
-
-        // Indicate current this.dollar
-        const dollar = this.add.sprite("coin", "buy");
-        dollar.position.set(centerShop.x + 110, centerShop.y - 135);
-        const dollarText = this.add.uiElement(UIElementType.LABEL, "buy", {position: new Vec2(centerShop.x + 90, centerShop.y - 134), text: ""+ this.currency});
-        (dollarText as Label).setTextColor(Color.WHITE);
-        (dollarText as Label).fontSize = 22;
 
         const left = centerShop.x - 100;
         const right = centerShop.x + 50;
@@ -272,6 +272,7 @@ export default class Level1 extends Scene {
         (option1TextLine2 as Label).setTextColor(Color.WHITE);
         (option1TextLine2 as Label).fontSize = 28;
         const option1TextLine3 = this.add.uiElement(UIElementType.LABEL, "buy", {position: new Vec2(left, centerShop.y - 80), text: "Cost: " + this.price[0] + " coins"});
+        this.option1priceId = option1TextLine3.id;
         (option1TextLine3 as Label).setTextColor(Color.WHITE);
         (option1TextLine3 as Label).fontSize = 28;
 
@@ -283,6 +284,7 @@ export default class Level1 extends Scene {
         (option2TextLine2 as Label).setTextColor(Color.WHITE);
         (option2TextLine2 as Label).fontSize = 28;
         const option2TextLine3 = this.add.uiElement(UIElementType.LABEL, "buy", {position: new Vec2(right, centerShop.y - 80), text: "Cost: " + this.price[1] + " coins"});
+        this.option2priceId = option2TextLine3.id;
         (option2TextLine3 as Label).setTextColor(Color.WHITE);
         (option2TextLine3 as Label).fontSize = 28;
 
@@ -290,10 +292,11 @@ export default class Level1 extends Scene {
         const option3Text = this.add.uiElement(UIElementType.LABEL, "buy", {position: new Vec2(left, centerShop.y - 10), text: "Base Upgrade"});
         (option3Text as Label).setTextColor(Color.WHITE);
         (option3Text as Label).fontSize = 28;
-        const option3TextLine2 = this.add.uiElement(UIElementType.LABEL, "buy", {position: new Vec2(left, centerShop.y + 5), text: "Next level: def +10%"});
+        const option3TextLine2 = this.add.uiElement(UIElementType.LABEL, "buy", {position: new Vec2(left, centerShop.y + 5), text: "Next level: HP/Max HP +20"});
         (option3TextLine2 as Label).setTextColor(Color.WHITE);
         (option3TextLine2 as Label).fontSize = 28;
         const option3TextLine3 = this.add.uiElement(UIElementType.LABEL, "buy", {position: new Vec2(left, centerShop.y + 20), text: "Cost: " + this.price[2] + " coins"});
+        this.option3priceId = option3TextLine3.id;
         (option3TextLine3 as Label).setTextColor(Color.WHITE);
         (option3TextLine3 as Label).fontSize = 28;
 
@@ -305,6 +308,7 @@ export default class Level1 extends Scene {
         (option4TextLine2 as Label).setTextColor(Color.WHITE);
         (option4TextLine2 as Label).fontSize = 28;
         const option4TextLine3 = this.add.uiElement(UIElementType.LABEL, "buy", {position: new Vec2(right, centerShop.y + 20), text: "Cost: " + this.price[3] + " coins"});
+        this.option4priceId = option4TextLine3.id;
         (option4TextLine3 as Label).setTextColor(Color.WHITE);
         (option4TextLine3 as Label).fontSize = 28;
 
@@ -392,7 +396,8 @@ export default class Level1 extends Scene {
         
         // Create the player
         this.initializePlayer();
-        
+
+        // Create items
         this.initializeItems();
 
         this.initializeNavmesh();
@@ -416,6 +421,20 @@ export default class Level1 extends Scene {
         });
         this.enemyCountLabel.setTextColor(Color.WHITE);
         this.enemyCountLabel.fontSize = 24;
+
+        this.moneyLayer = this.addUILayer("moneyLayer");
+        this.moneyLayer.setHidden(false);
+
+        // Indicate current this.dollar
+        const dollar = this.add.sprite("coin", "moneyLayer");
+        dollar.position.set(300, 28);
+
+        const dollarText = this.add.uiElement(UIElementType.LABEL, "moneyLayer", {
+            position: new Vec2(324, 28),
+            text: ""+ this.money
+        });
+        (dollarText as Label).setTextColor(Color.WHITE);
+        (dollarText as Label).fontSize = 24;
 
         this.timer = this.addUILayer("timer");
         this.timer.setHidden(false);
@@ -469,10 +488,15 @@ export default class Level1 extends Scene {
 
         this.receiver.subscribe(PlayerEvent.PLAYER_KILLED);
         this.receiver.subscribe(PlayerEvent.SHOP_ENTERED);
+
         this.receiver.subscribe(ShopEvent.OPTION_ONE_SELECTED);
         this.receiver.subscribe(ShopEvent.OPTION_TWO_SELECTED);
         this.receiver.subscribe(ShopEvent.OPTION_THREE_SELECTED);
         this.receiver.subscribe(ShopEvent.OPTION_FOUR_SELECTED);
+
+        this.receiver.subscribe(ShopEvent.BOUGHT_ITEM);
+        this.receiver.subscribe(ShopEvent.BASE_UPGRADED);
+        this.receiver.subscribe(ShopEvent.GET_NEW_SEED);
 
         this.receiver.subscribe(BattlerEvent.BATTLER_KILLED);
         this.receiver.subscribe(BattlerEvent.BATTLER_RESPAWN);
@@ -617,6 +641,16 @@ export default class Level1 extends Scene {
         }
     }
 
+    protected handleShopEntered(event: GameEvent): void {
+        // If the shop UI Layer is already open, do nothing
+        if (this.getLayer("shop").isHidden() === false) {
+            return;
+        }
+
+        // Open the shop UI Layer
+        this.toggleShopMenu();
+    }
+
     private toggleShopMenu(): void {
         const requestedLayer = this.getLayer("shop");
         const isHidden = requestedLayer.isHidden();
@@ -649,11 +683,16 @@ export default class Level1 extends Scene {
         let inventory = player.inventory;
         let pearl = inventory.find(item => item instanceof Pearl);
         if (pearl) {
-            this.currency += 10;
             inventory.remove(pearl.id);
-            // this.emitter.fireEvent("play_sound", {key: "sell", loop: false, holdReference: false});
+            this.money += 10;
+
+            // Update the currency label
+            const dollarText = this.getLayer("moneyLayer").getItems().find(node => node instanceof Label) as Label;
+            if (dollarText) {
+                dollarText.text = "" + this.money;
+            }
         }
-        
+
     }
 
     private CheatInput(): void {
@@ -764,26 +803,149 @@ export default class Level1 extends Scene {
                 this.handleSell(event);
                 break;
             }
+            case ShopEvent.BOUGHT_ITEM: {
+                let price = event.data.get("price");
+                this.money -= price;
+
+                // Update the currency label
+                const dollarText = this.getLayer("moneyLayer").getItems().find(node => node instanceof Label) as Label;
+                if (dollarText) {
+                    dollarText.text = "" + this.money;
+                }
+                break;
+            }
             case ShopEvent.OPTION_ONE_SELECTED: {
                 console.log("Option 1 selected");
-                if (this.currency >= this.price[0]) {
-                    this.currency -= this.price[0];
+
+                if (this.money >= this.price[0]) {
+                    this.money -= this.price[0];
                     this.price[0] += 10;
                     // this.emitter.fireEvent("play_sound", {key: "purchase", loop: false, holdReference: false});
                     this.emitter.fireEvent(ShopEvent.TURRET_UPGRADED, {});
+                    this.emitter.fireEvent(ShopEvent.BOUGHT_ITEM, {price: this.price[0]});
+
+                    // Remove the existing price label
+                    const oldPriceLabel = this.getLayer("buy").getItems().find(node => node.id === this.option1priceId) as Label;
+                    if (oldPriceLabel) {
+                        oldPriceLabel.destroy();
+                    }
+
+                    // Change the price of the next upgrade and display it
+                    const newPriceLabel = this.add.uiElement(UIElementType.LABEL, "buy", {
+                        position: new Vec2(95, 120), 
+                        text: "Cost: " + this.price[0] + " coins"
+                    });
+                    (newPriceLabel as Label).setTextColor(Color.WHITE);
+                    (newPriceLabel as Label).fontSize = 28;
+
+                    this.option1priceId = newPriceLabel.id;
                 }
+
                 break;
             }
             case ShopEvent.OPTION_TWO_SELECTED: {
                 console.log("Option 2 selected");
+
+                if (this.money >= this.price[1]) {
+                    this.money -= this.price[1];
+                    this.price[1] += 10;
+                    // this.emitter.fireEvent(ShopEvent.GOLD_CHANCE_UPGRADE, {});
+                    this.emitter.fireEvent(ShopEvent.BOUGHT_ITEM, {price: this.price[1]});
+
+                    // Remove the existing price label
+                    const oldPriceLabel = this.getLayer("buy").getItems().find(node => node.id === this.option2priceId) as Label;
+                    if (oldPriceLabel) {
+                        oldPriceLabel.destroy();
+                    }
+
+                    // Change the price of the next upgrade and display it
+                    const newPriceLabel = this.add.uiElement(UIElementType.LABEL, "buy", {
+                        position: new Vec2(245, 120), 
+                        text: "Cost: " + this.price[1] + " coins"
+                    });
+                    (newPriceLabel as Label).setTextColor(Color.WHITE);
+                    (newPriceLabel as Label).fontSize = 28;
+                    
+                    this.option2priceId = newPriceLabel.id;
+                }
+
                 break;
             }
             case ShopEvent.OPTION_THREE_SELECTED: {
                 console.log("Option 3 selected");
+
+                if (this.money >= this.price[2]) {
+                    this.money -= this.price[2];
+                    this.price[2] += 10;
+                    this.emitter.fireEvent(ShopEvent.BASE_UPGRADED, {});
+                    this.emitter.fireEvent(ShopEvent.BOUGHT_ITEM, {price: this.price[2]});
+                    
+                    // Remove the existing price label
+                    const oldPriceLabel = this.getLayer("buy").getItems().find(node => node.id === this.option3priceId) as Label;
+                    if (oldPriceLabel) {
+                        oldPriceLabel.destroy();
+                    }
+
+                    // Change the price of the next upgrade and display it
+                    const newPriceLabel = this.add.uiElement(UIElementType.LABEL, "buy", {
+                        position: new Vec2(95, 220),
+                        text: "Cost: " + this.price[2] + " coins"
+                    });
+                    (newPriceLabel as Label).setTextColor(Color.WHITE);
+                    (newPriceLabel as Label).fontSize = 28;
+                    
+                    this.option3priceId = newPriceLabel.id;
+                }
+
                 break;
             }
             case ShopEvent.OPTION_FOUR_SELECTED: {
                 console.log("Option 4 selected");
+                console.log("Current money: ", this.money);
+                console.log("Current price: ", this.price[3]);
+
+                if (this.money >= this.price[3]) {
+                    this.money -= this.price[3];
+                    this.price[3] += 10;
+                    this.emitter.fireEvent(ShopEvent.GET_NEW_SEED, {});
+                    this.emitter.fireEvent(ShopEvent.BOUGHT_ITEM, {price: this.price[3]});
+
+                    // Remove the existing price label
+                    const oldPriceLabel = this.getLayer("buy").getItems().find(node => node.id === this.option4priceId) as Label;
+                    if (oldPriceLabel) {
+                        oldPriceLabel.destroy();
+                    }
+
+                    // Change the price of the next upgrade and display it
+                    const newPriceLabel = this.add.uiElement(UIElementType.LABEL, "buy", {
+                        position: new Vec2(245, 220),
+                        text: "Cost: " + this.price[3] + " coins"
+                    });
+                    (newPriceLabel as Label).setTextColor(Color.WHITE);
+                    (newPriceLabel as Label).fontSize = 28;
+                    
+                    this.option4priceId = newPriceLabel.id;
+                }
+
+                console.log("New money: ", this.money);
+                console.log("New price: ", this.price[3]);
+
+                break;
+            }
+
+            case ShopEvent.BASE_UPGRADED: {
+                // Heal base npc's health by 20
+                let base = this.battlers.find(b => b.id === this.baseId) as NPCActor;
+                base.health += 20;
+                base.maxHealth += 20;
+                
+                break;
+            }
+            case ShopEvent.GET_NEW_SEED: {
+                // Add a new seed to the ground in front of the base NPC
+                let sprite = this.add.sprite("seed", "primary");
+                this.seeds.push(new Seed(sprite));
+                this.seeds[this.seeds.length - 1].position.set(264, 200);
                 break;
             }
             
@@ -969,16 +1131,6 @@ export default class Level1 extends Scene {
             this.battlers.push(turret);
             this.turret = turret;
         }, 4000);
-    }
-
-    protected handleShopEntered(event: GameEvent): void {
-        // If the shop UI Layer is already open, do nothing
-        if (this.getLayer("shop").isHidden() === false) {
-            return;
-        }
-
-        // Open the shop UI Layer
-        this.toggleShopMenu();
     }
 
     protected handleItemPickedUp(event: GameEvent): void {
@@ -1176,7 +1328,10 @@ export default class Level1 extends Scene {
         baseNPC.addPhysics(new AABB(Vec2.ZERO, new Vec2(7, 7)), null, false);
 
         // Give the NPCS their healthbars
-        let healthbar = new HealthbarHUD(this, baseNPC, "primary", {size: baseNPC.size.clone().scaled(4, 1/2), offset: baseNPC.size.clone().scaled(0, -1/2)});
+        let healthbar = new HealthbarHUD(this, baseNPC, "primary", {
+            size: baseNPC.size.clone().scaled(4, 1/2), 
+            offset: baseNPC.size.clone().scaled(0, -1/2)
+        });
         this.healthbars.set(baseNPC.id, healthbar);
 
         this.baseId = baseNPC.id;
@@ -1244,7 +1399,7 @@ export default class Level1 extends Scene {
     }
 
     /**
-     * Initialize the items in the scene (healthpacks and laser guns)
+     * Initialize the items in the scene
      */
     protected initializeItems(): void {
         let seeds = this.load.getObject("seeds");
@@ -1257,7 +1412,7 @@ export default class Level1 extends Scene {
 
         let shop = this.load.getObject("shop");
         let shopSprite = this.add.sprite("shop", "primary");
-        this.shop = new Shop(shopSprite, this.currency);
+        this.shop = new Shop(shopSprite, this.money);
         this.shop.position.set(shop.location[0][0], shop.location[0][1]);
 
         let pearls = this.load.getObject("pearls");
