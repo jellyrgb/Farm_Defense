@@ -62,6 +62,8 @@ export default class Level1 extends Scene {
     private monsterHealth: number;
     private monsterMaxHealth: number;
     private monsterSpeed: number;
+    private levelTileFile: string;
+    private levelMusicFile: string;
 
     /** GameSystems in the Scene */
     private inventoryHud: InventoryHUD;
@@ -129,6 +131,8 @@ export default class Level1 extends Scene {
         this.monsterMaxHealth = 100;
         this.monsterType = "monsterB";
         this.monsterSpeed = 10;
+        this.levelTileFile = "fd_assets/tilemaps/level1.json";
+        this.levelMusicFile = "fd_assets/sounds/level1.mp3";
     }
 
     /**
@@ -163,7 +167,7 @@ export default class Level1 extends Scene {
         this.load.image("monsterBLogo", "fd_assets/sprites/logoB.png")
 
         // Load the tilemap
-        this.load.tilemap("level1", "fd_assets/tilemaps/level1.json");
+        this.load.tilemap("level", this.levelTileFile);
 
         // Load the enemy locations
         this.load.object("enemy_location", "fd_assets/data/enemies/enemy_location.json");
@@ -182,7 +186,7 @@ export default class Level1 extends Scene {
         this.load.image("coin", "fd_assets/sprites/coin.png");
 
         // Load the sounds
-        this.load.audio("background_music", "fd_assets/sounds/level1.mp3");
+        this.load.audio("background_music", this.levelMusicFile);
         this.load.audio("level_clear", "fd_assets/sounds/level_clear.mp3");
         this.load.audio("pause", "fd_assets/sounds/pause.mp3");
         this.load.audio("night_start", "fd_assets/sounds/night_start.mp3");
@@ -213,7 +217,7 @@ export default class Level1 extends Scene {
         this.blueEnemyCount = enemy.enemies.length;
 
         // Add in the tilemap
-        let tilemapLayers = this.add.tilemap("level1");
+        let tilemapLayers = this.add.tilemap("level");
 
         // Get the wall layer
         this.walls = <OrthogonalTilemap>tilemapLayers[1].getItems()[0];
