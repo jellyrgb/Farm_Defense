@@ -781,6 +781,13 @@ export default class Level3 extends Scene {
         if(cheatCode == "VISIBLE"){
             player.visible = true;
         }
+        if(cheatCode == "MONEY"){
+            this.money += 10000;
+            const dollarText = this.getLayer("moneyLayer").getItems().find(node => node instanceof Label) as Label;
+            if (dollarText) {
+                dollarText.text = "" + this.money;
+            }
+        }
     }
 
     /**

@@ -76,6 +76,11 @@ export default class TurretAttack extends NPCAction {
     public performAction(target: TargetableEntity): void {
         //this.timer.isStopped() ? console.log("Turret attack cooling down!") : console.log("Turret attack ready!");
 
+        if (!target || !this.actor) {
+            console.log("Target or Actor is null");
+            return;
+        }
+
         if (this.timer.isStopped() && this.actor.position.distanceTo(target.position) < 300) {
             this.actor.animation.play("ATTACKING", false);
 

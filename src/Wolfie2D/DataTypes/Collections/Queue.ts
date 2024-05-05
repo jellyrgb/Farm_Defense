@@ -5,7 +5,7 @@ import Collection from "../Interfaces/Collection";
  */
 export default class Queue<T> implements Collection {
     /** The maximum number of elements in the Queue */
-    private readonly MAX_ELEMENTS: number;
+    private MAX_ELEMENTS: number;
 
     /** The internal representation of the queue */
     private q: Array<T>;
@@ -34,16 +34,35 @@ export default class Queue<T> implements Collection {
     /**
      * Adds an item to the back of the queue
      * @param item The item to add to the back of the queue
+     * if queue is full, then copy the original and paste to new queue that size of origianl queue * 2
      */
-    enqueue(item: T): void{
-        if((this.tail + 1) % this.MAX_ELEMENTS === this.head){
-            throw new Error("Queue full - cannot add element");
+    enqueue(item: T): void {
+        if (this.size === this.MAX_ELEMENTS) {
+            this.expandQueue();
         }
-
-        this.size += 1;
+    
         this.q[this.tail] = item;
-        this.tail = (this.tail + 1) % this.MAX_ELEMENTS;
+        this.tail = (this.tail + 1) % this.q.length; // Update to use the new length
+        this.size++;
     }
+    
+    private expandQueue(): void {
+        console.log(" QUEUE EXPANDED");
+        let newQueue = new Array<T>(this.MAX_ELEMENTS * 2);
+        let current = this.head;
+        let index = 0;
+    
+        while (current !== this.tail) {
+            newQueue[index++] = this.q[current];
+            current = (current + 1) % this.MAX_ELEMENTS;
+        }
+    
+        this.q = newQueue;
+        this.head = 0;
+        this.tail = this.size; // new tail is at the end of the old queue
+        this.MAX_ELEMENTS *= 2; // update the max elements
+    }
+    
 
     /**
      * Retrieves an item from the front of the queue

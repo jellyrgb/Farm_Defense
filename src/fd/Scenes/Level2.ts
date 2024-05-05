@@ -772,14 +772,21 @@ export default class Level2 extends Scene {
             this.sceneManager.changeToScene(Level6);
         }
 
-        if(cheatCode == "UNLOCK"){
+        if (cheatCode == "UNLOCK") {
             MainMenu.maxLevelUnlocked = Math.max(MainMenu.maxLevelUnlocked, 6);
         }
-        if(cheatCode == "INVISIBLE"){
+        if (cheatCode == "INVISIBLE") {
             player.visible = false;
         }
-        if(cheatCode == "VISIBLE"){
+        if (cheatCode == "VISIBLE") {
             player.visible = true;
+        }
+        if (cheatCode == "MONEY") {
+            this.money += 10000;
+            const dollarText = this.getLayer("moneyLayer").getItems().find(node => node instanceof Label) as Label;
+            if (dollarText) {
+                dollarText.text = "" + this.money;
+            }
         }
     }
 
