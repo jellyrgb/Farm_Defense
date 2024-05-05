@@ -10,8 +10,8 @@ export default class GameOver extends Scene {
 
     startScene() {
         // Play game over sound
-        // this.load.audio("game_over", "fd_assets/sounds/game_over.mp3");
-        // this.emitter.fireEvent("play_sound", {key: "game_over", loop: false, holdReference: false});
+        this.load.audio("game_over", "fd_assets/sounds/game_over.mp3");
+        this.emitter.fireEvent("play_sound", {key: "game_over", loop: false, holdReference: false});
 
         const center = this.viewport.getCenter();
 

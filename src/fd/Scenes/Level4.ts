@@ -126,7 +126,7 @@ export default class Level4 extends Scene {
         this.monsterType = "monsterB";
         this.monsterSpeed = 10;
         this.levelTileFile = "fd_assets/tilemaps/level4.json";
-        this.levelMusicFile = "fd_assets/sounds/level4.mp3";
+        this.levelMusicFile = "fd_assets/sounds/summer.mp3";
 
         this.battlers = new Array<Battler & Actor>();
         this.healthbars = new Map<number, HealthbarHUD>();
@@ -206,6 +206,11 @@ export default class Level4 extends Scene {
         this.load.audio("peach_attack", "fd_assets/sounds/peach.mp3");
         this.load.audio("watermelon_attack", "fd_assets/sounds/watermelon.mp3");
         this.load.audio("tomato_attack", "fd_assets/sounds/tomato.mp3");
+
+        this.load.audio("game_over", "fd_assets/sounds/game_over.mp3");
+        this.load.audio("shop_buy", "fd_assets/sounds/shop_buy.mp3");
+        this.load.audio("shop_entered", "fd_assets/sounds/shop_entered.mp3");
+        this.load.audio("pearl_pick_up", "fd_assets/sounds/pearl_pick_up.mp3");
     }
 
     /**
@@ -703,6 +708,7 @@ export default class Level4 extends Scene {
         } 
         else {
             requestedLayer.setHidden(false);
+            this.emitter.fireEvent("play_sound", {key: "shop_entered", loop: false, holdReference: false});
             console.log("Shop is now not hidden")
         }
     }
@@ -876,7 +882,7 @@ export default class Level4 extends Scene {
                 console.log("Option 1 selected");
 
                 if (this.money >= this.price[0]) {
-                    // this.emitter.fireEvent("play_sound", {key: "purchase", loop: false, holdReference: false});
+                    this.emitter.fireEvent("play_sound", {key: "shop_buy", loop: false, holdReference: false});
                     this.emitter.fireEvent(ShopEvent.TURRET_UPGRADED, {});
                     this.emitter.fireEvent(ShopEvent.BOUGHT_ITEM, {price: this.price[0]});
                     this.price[0] += 10;
@@ -1086,7 +1092,7 @@ export default class Level4 extends Scene {
         if (pearls.length > 0) {
             inventory.add(pearls.reduce(ClosestPositioned(node)));
             // Play item pick up sound
-            this.emitter.fireEvent("play_sound", {key: "pick_up", loop: false, holdReference: false});
+            this.emitter.fireEvent("play_sound", {key: "pearl_pick_up", loop: false, holdReference: false});
         }
 
         if (items.length > 0) {
