@@ -22,6 +22,7 @@ export default class EnemyBehavior extends NPCBehavior {
     protected target: TargetableEntity;
     /** The range of the enemy */
     protected range: number;
+    protected level: number;
 
     /** Initialize the NPC AI */
     public initializeAI(owner: NPCActor, options: EnemyOptions): void {
@@ -30,6 +31,7 @@ export default class EnemyBehavior extends NPCBehavior {
         // Initialize the targetable entity the monster should try to attack and the range to the target
         this.target = options.target
         this.range = options.range;
+        this.level = options.level;
 
         // Initialize statuses
         this.initializeStatuses();
@@ -82,7 +84,7 @@ export default class EnemyBehavior extends NPCBehavior {
         let scene = this.owner.getScene();
 
         // An action for attacking turret in the scene
-        let attackTurret = new MonsterAttack(this, this.owner);
+        let attackTurret = new MonsterAttack(this, this.owner, this.level);
         attackTurret.targets = scene.getBattlers();
         attackTurret.targetFinder = new BasicFinder<Battler>(ClosestPositioned(this.owner), BattlerActiveFilter(), EnemyFilter(this.owner), RangeFilter(this.target, 0, this.range*this.range));
         attackTurret.addPrecondition(EnemyStatuses.TARGETABLE_ENEMY_EXISTS);
@@ -112,6 +114,7 @@ export default class EnemyBehavior extends NPCBehavior {
 export interface EnemyOptions {
     target: TargetableEntity
     range: number;
+    level: number;
 }
 
 export type EnemyStatus = typeof EnemyStatuses[keyof typeof EnemyStatuses];

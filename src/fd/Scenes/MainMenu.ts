@@ -104,7 +104,7 @@ export default class MainMenu extends Scene {
 
 
         // Add Controls button
-        const controls = this.add.uiElement(UIElementType.BUTTON, "mainMenu", {position: new Vec2(center.x, center.y - 30), text: "CONROLS"});
+        const controls = this.add.uiElement(UIElementType.BUTTON, "mainMenu", {position: new Vec2(center.x, center.y - 30), text: "CONTROLS"});
         (controls as Label).setTextColor(Color.WHITE);
         (controls as Label).fontSize = 26;
         controls.size.set(200, 50);
@@ -133,6 +133,7 @@ export default class MainMenu extends Scene {
 
 
         // Level selection screen
+        const levelColor = new Color(120,181,149);
         this.level = this.addUILayer("levelSelect");
         this.level.setHidden(true);
 
@@ -149,10 +150,19 @@ export default class MainMenu extends Scene {
             const yPosition = center.y - 150 + row * 300; 
         
             const levelRect = new Rect(new Vec2(xPosition, yPosition), new Vec2(250, 200));
-            levelRect.color = this.steelBlue;
-            levelRect.borderWidth = 2;
-            levelRect.borderColor = this.steelBlueBorder;
+            levelRect.color = levelColor;
+            levelRect.borderWidth = 0;
             this.level.addNode(levelRect);
+
+            const levelRect2 = new Rect(new Vec2(xPosition, yPosition), new Vec2(240, 190));
+            levelRect2.color = Color.WHITE;
+            levelRect2.borderWidth = 0;
+            this.level.addNode(levelRect2);
+
+            const levelRect3 = new Rect(new Vec2(xPosition, yPosition), new Vec2(230, 180));
+            levelRect3.color = levelColor;
+            levelRect3.borderWidth = 0;
+            this.level.addNode(levelRect3);
         
             const levelButton = this.add.uiElement(UIElementType.BUTTON, "levelSelect", {
                 position: new Vec2(xPosition, yPosition),
@@ -167,14 +177,14 @@ export default class MainMenu extends Scene {
                 (levelButton as Label).setTextColor(Color.WHITE);
                 levelButton.onClickEventId = "level" + (index + 1);
             } else {
-                (levelButton as Label).setTextColor(new Color(188, 188, 188)); 
+                (levelButton as Label).setTextColor(new Color(204, 204, 204)); 
                 (levelButton as Label).fontSize = 20;
                 (levelButton as Label).setText(lev + "\n(Locked)");
                 levelButton.onClick = () => {
                     const tempRect = new Rect(new Vec2(500, 500), new Vec2(800, 400));
-                    tempRect.borderWidth = 2;
-                    tempRect.borderColor = new Color(14, 18, 55);
-                    tempRect.color = new Color(21, 27, 84);
+                    tempRect.borderWidth = 3;
+                    tempRect.borderColor = Color.WHITE;
+                    tempRect.color = levelColor
                     this.level.addNode(tempRect);
                 
                     const tempLabel = <Label>this.add.uiElement(UIElementType.LABEL, "levelSelect", {
@@ -205,10 +215,19 @@ export default class MainMenu extends Scene {
         controlPhoto.position.set(center.x, center.y);
 
         const controlBack = new Rect(new Vec2(center.x , center.y - 20), new Vec2(400, 420));
-        controlBack.borderWidth = 2;
-        controlBack.borderColor = this.steelBlueBorder;
-        controlBack.color = this.steelBlue;
+        controlBack.borderWidth = 0;
+        controlBack.color = new Color(120,181,149);
         this.controls.addNode(controlBack);
+
+        const controlBack2 = new Rect(new Vec2(center.x , center.y - 20), new Vec2(390, 410));
+        controlBack2.borderWidth = 0;
+        controlBack2.color = Color.WHITE;
+        this.controls.addNode(controlBack2);
+
+        const controlBack3 = new Rect(new Vec2(center.x , center.y - 20), new Vec2(380, 400));
+        controlBack3.borderWidth = 0;
+        controlBack3.color = new Color(120,181,149);
+        this.controls.addNode(controlBack3);
 
         const header = <Label>this.add.uiElement(UIElementType.LABEL, "controls", {position: new Vec2(center.x, center.y - 200), text: "Controls"});
         header.textColor = Color.CYAN;
@@ -310,10 +329,19 @@ export default class MainMenu extends Scene {
 
         // Story
         const storyRect = new Rect(new Vec2(center.x , center.y - 280), new Vec2(1000, 410));
-        storyRect.borderWidth = 2;
-        storyRect.borderColor = this.steelBlueBorder;
-        storyRect.color = this.steelBlue;
+        storyRect.borderWidth = 0;
+        storyRect.color = new Color(120,181,149);
         this.help.addNode(storyRect);
+
+        const storyRect2 = new Rect(new Vec2(center.x , center.y - 280), new Vec2(990, 400));
+        storyRect2.borderWidth = 0;
+        storyRect2.color = Color.WHITE;
+        this.help.addNode(storyRect2);
+
+        const storyRect3 = new Rect(new Vec2(center.x , center.y - 280), new Vec2(980, 390));
+        storyRect3.borderWidth = 0;
+        storyRect3.color = new Color(120,181,149);
+        this.help.addNode(storyRect3);
 
         const helpHeader = <Label>this.add.uiElement(UIElementType.LABEL, "help", {position: new Vec2(center.x, center.y - 450), text: "Story"});
         helpHeader.textColor = Color.CYAN;
@@ -332,7 +360,7 @@ export default class MainMenu extends Scene {
         const line4 = <Label>this.add.uiElement(UIElementType.LABEL, "help", {position: new Vec2(center.x, center.y - 250), text: text4});
         const line5 = <Label>this.add.uiElement(UIElementType.LABEL, "help", {position: new Vec2(center.x, center.y - 200), text: text5});
         const line6 = <Label>this.add.uiElement(UIElementType.LABEL, "help", {position: new Vec2(center.x, center.y - 150), text: text6});
-        const line7 = <Label>this.add.uiElement(UIElementType.LABEL, "help", {position: new Vec2(center.x, center.y - 100), text: text7});
+        const line7 = <Label>this.add.uiElement(UIElementType.LABEL, "help", {position: new Vec2(center.x, center.y - 110), text: text7});
 
         line1.textColor = Color.WHITE; line1.fontSize = 22;
         line2.textColor = Color.WHITE; line2.fontSize = 22;
@@ -344,10 +372,19 @@ export default class MainMenu extends Scene {
 
         // Development Team
         const teamRect = new Rect(new Vec2(center.x , center.y + 5), new Vec2(1000, 130));
-        teamRect.borderWidth = 2;
-        teamRect.borderColor = this.steelBlueBorder;
-        teamRect.color = this.steelBlue;
+        teamRect.borderWidth = 0;
+        teamRect.color = new Color(120,181,149);
         this.help.addNode(teamRect);
+
+        const teamRect2 = new Rect(new Vec2(center.x , center.y + 5), new Vec2(990, 120));
+        teamRect2.borderWidth = 0;
+        teamRect2.color = Color.WHITE;
+        this.help.addNode(teamRect2);
+
+        const teamRect3 = new Rect(new Vec2(center.x , center.y + 5), new Vec2(980, 110));
+        teamRect3.borderWidth = 0;
+        teamRect3.color = new Color(120,181,149);
+        this.help.addNode(teamRect3);
 
         const devTeam = <Label>this.add.uiElement(UIElementType.LABEL, "help", {position: new Vec2(center.x, center.y - 25), text: "Development Team"});
         devTeam.textColor = Color.CYAN;
@@ -358,10 +395,19 @@ export default class MainMenu extends Scene {
 
         // Cheat Codes
         const cheatRect = new Rect(new Vec2(center.x , center.y + 200 ), new Vec2(1000, 240));
-        cheatRect.borderWidth = 2;
-        cheatRect.borderColor = this.steelBlueBorder;
-        cheatRect.color = this.steelBlue;
+        cheatRect.borderWidth = 0;
+        cheatRect.color = new Color(120,181,149);
         this.help.addNode(cheatRect);
+
+        const cheatRect2 = new Rect(new Vec2(center.x , center.y + 200 ), new Vec2(990, 230));
+        cheatRect2.borderWidth = 0;
+        cheatRect2.color = Color.WHITE;
+        this.help.addNode(cheatRect2);
+
+        const cheatRect3 = new Rect(new Vec2(center.x , center.y + 200 ), new Vec2(980, 220));
+        cheatRect3.borderWidth = 0;
+        cheatRect3.color = new Color(120,181,149);
+        this.help.addNode(cheatRect3);
 
         const Cheat = <Label>this.add.uiElement(UIElementType.LABEL, "help", {position: new Vec2(center.x, center.y + 110), text: "Cheat Codes"});
         Cheat.textColor = Color.CYAN;

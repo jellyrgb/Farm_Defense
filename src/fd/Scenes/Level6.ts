@@ -43,12 +43,11 @@ import Rect from "../../Wolfie2D/Nodes/Graphics/Rect";
 import TextInput from "../../Wolfie2D/Nodes/UIElements/TextInput";
 import TurretBehavior from "../AI/NPC/NPCBehavior/TurretBehavior";
 import BaseBehavior from "../AI/NPC/NPCBehavior/BaseBehavior";
-import Level1 from "../Scenes/Level1";
+import Level1 from "../Scenes/Level1"; 
 import Level2 from "../Scenes/Level2";
 import Level3 from "../Scenes/Level3";
 import Level4 from "../Scenes/Level4";
 import Level5 from "../Scenes/Level5";
-// import Level6 from "../Scenes/Level6"; 
 import GameOver from "./GameOver";
 
 const BattlerGroups = {
@@ -85,6 +84,7 @@ export default class Level6 extends Scene {
     private price: Array<number>;
     private buyMenu: Layer;
     private moneyLayer: Layer;
+    private goldUpgrade: number;
 
     // The wall layer of the tilemap
     private walls: OrthogonalTilemap;
@@ -119,6 +119,13 @@ export default class Level6 extends Scene {
     public constructor(viewport: Viewport, sceneManager: SceneManager, renderingManager: RenderingManager, options: Record<string, any>) {
         super(viewport, sceneManager, renderingManager, options);
 
+        this.monsterHealth = 500;
+        this.monsterMaxHealth = 500;
+        this.monsterType = "monsterC";
+        this.monsterSpeed = 10;
+        this.levelTileFile = "fd_assets/tilemaps/level6.json";
+        this.levelMusicFile = "fd_assets/sounds/level6.mp3";
+
         this.battlers = new Array<Battler & Actor>();
         this.healthbars = new Map<number, HealthbarHUD>();
 
@@ -127,13 +134,7 @@ export default class Level6 extends Scene {
 
         this.money = 30;
         this.price = [30, 20, 10, 10];
-
-        this.monsterHealth = 100;
-        this.monsterMaxHealth = 100;
-        this.monsterType = "monsterB";
-        this.monsterSpeed = 10;
-        this.levelTileFile = "fd_assets/tilemaps/level6.json";
-        this.levelMusicFile = "fd_assets/sounds/level1.mp3";
+        this.goldUpgrade = 0;
     }
 
     /**
@@ -332,6 +333,7 @@ export default class Level6 extends Scene {
         this.receiver.subscribe(ShopEvent.BOUGHT_ITEM);
         this.receiver.subscribe(ShopEvent.BASE_UPGRADED);
         this.receiver.subscribe(ShopEvent.GET_NEW_SEED);
+        this.receiver.subscribe(ShopEvent.GOLD_CHANCE_UPGRADE);
 
         this.receiver.subscribe(BattlerEvent.BATTLER_KILLED);
         this.receiver.subscribe(BattlerEvent.BATTLER_RESPAWN);
@@ -348,7 +350,6 @@ export default class Level6 extends Scene {
         this.receiver.subscribe("buy");
         this.receiver.subscribe("sell");
         this.receiver.subscribe("exitBuy");
-        this.receiver.subscribe("exitSell");
     }
 
     /** Initializes the layers in the scene */
@@ -440,7 +441,7 @@ export default class Level6 extends Scene {
         const option2Text = this.add.uiElement(UIElementType.LABEL, "buy", {position: new Vec2(right, centerShop.y - 110), text: "Upgrade chance"});
         (option2Text as Label).setTextColor(Color.WHITE);
         (option2Text as Label).fontSize = 28;
-        const option2TextLine2 = this.add.uiElement(UIElementType.LABEL, "buy", {position: new Vec2(right, centerShop.y - 95), text: "Next level: Gold +5%"});
+        const option2TextLine2 = this.add.uiElement(UIElementType.LABEL, "buy", {position: new Vec2(right, centerShop.y - 95), text: "Next level: Upper +0.5"});
         (option2TextLine2 as Label).setTextColor(Color.WHITE);
         (option2TextLine2 as Label).fontSize = 28;
         const option2TextLine3 = this.add.uiElement(UIElementType.LABEL, "buy", {position: new Vec2(right, centerShop.y - 80), text: "Cost: " + this.price[1] + " coins"});
@@ -717,6 +718,7 @@ export default class Level6 extends Scene {
         let pearl = inventory.find(item => item instanceof Pearl);
         if (pearl) {
             inventory.remove(pearl.id);
+            pearl.getSprite().destroy();
             this.money += 10;
 
             // Update the currency label
@@ -858,11 +860,10 @@ export default class Level6 extends Scene {
                 console.log("Option 1 selected");
 
                 if (this.money >= this.price[0]) {
-                    this.money -= this.price[0];
-                    this.price[0] += 10;
                     // this.emitter.fireEvent("play_sound", {key: "purchase", loop: false, holdReference: false});
                     this.emitter.fireEvent(ShopEvent.TURRET_UPGRADED, {});
                     this.emitter.fireEvent(ShopEvent.BOUGHT_ITEM, {price: this.price[0]});
+                    this.price[0] += 10;
 
                     // Remove the existing price label
                     const oldPriceLabel = this.getLayer("buy").getItems().find(node => node.id === this.option1priceId) as Label;
@@ -887,10 +888,9 @@ export default class Level6 extends Scene {
                 console.log("Option 2 selected");
 
                 if (this.money >= this.price[1]) {
-                    this.money -= this.price[1];
-                    this.price[1] += 10;
-                    // this.emitter.fireEvent(ShopEvent.GOLD_CHANCE_UPGRADE, {});
+                    this.emitter.fireEvent(ShopEvent.GOLD_CHANCE_UPGRADE, {});
                     this.emitter.fireEvent(ShopEvent.BOUGHT_ITEM, {price: this.price[1]});
+                    this.price[1] += 10;
 
                     // Remove the existing price label
                     const oldPriceLabel = this.getLayer("buy").getItems().find(node => node.id === this.option2priceId) as Label;
@@ -915,10 +915,9 @@ export default class Level6 extends Scene {
                 console.log("Option 3 selected");
 
                 if (this.money >= this.price[2]) {
-                    this.money -= this.price[2];
-                    this.price[2] += 10;
                     this.emitter.fireEvent(ShopEvent.BASE_UPGRADED, {});
                     this.emitter.fireEvent(ShopEvent.BOUGHT_ITEM, {price: this.price[2]});
+                    this.price[2] += 10;
                     
                     // Remove the existing price label
                     const oldPriceLabel = this.getLayer("buy").getItems().find(node => node.id === this.option3priceId) as Label;
@@ -941,14 +940,11 @@ export default class Level6 extends Scene {
             }
             case ShopEvent.OPTION_FOUR_SELECTED: {
                 console.log("Option 4 selected");
-                console.log("Current money: ", this.money);
-                console.log("Current price: ", this.price[3]);
 
                 if (this.money >= this.price[3]) {
-                    this.money -= this.price[3];
-                    this.price[3] += 10;
                     this.emitter.fireEvent(ShopEvent.GET_NEW_SEED, {});
                     this.emitter.fireEvent(ShopEvent.BOUGHT_ITEM, {price: this.price[3]});
+                    this.price[3] += 10;
 
                     // Remove the existing price label
                     const oldPriceLabel = this.getLayer("buy").getItems().find(node => node.id === this.option4priceId) as Label;
@@ -967,9 +963,6 @@ export default class Level6 extends Scene {
                     this.option4priceId = newPriceLabel.id;
                 }
 
-                console.log("New money: ", this.money);
-                console.log("New price: ", this.price[3]);
-
                 break;
             }
 
@@ -985,11 +978,14 @@ export default class Level6 extends Scene {
             case ShopEvent.GET_NEW_SEED: {
                 // Add a new seed to the ground in front of the base NPC
                 let sprite = this.add.sprite("seed", "primary");
-                this.seeds.push(new Seed(sprite));
+                this.seeds.push(new Seed(sprite, 6));
                 this.seeds[this.seeds.length - 1].position.set(264, 200);
                 break;
             }
-            
+            case ShopEvent.GOLD_CHANCE_UPGRADE: {
+                this.goldUpgrade += 0.5;
+                break;
+            }
 
             // Battle Events
             case BattlerEvent.BATTLER_KILLED: {
@@ -1073,10 +1069,14 @@ export default class Level6 extends Scene {
 
         if (pearls.length > 0) {
             inventory.add(pearls.reduce(ClosestPositioned(node)));
+            // Play item pick up sound
+            this.emitter.fireEvent("play_sound", {key: "pick_up", loop: false, holdReference: false});
         }
 
         if (items.length > 0) {
             inventory.add(items.reduce(ClosestPositioned(node)));
+            // Play item pick up sound
+            this.emitter.fireEvent("play_sound", {key: "pick_up", loop: false, holdReference: false});
         }
     }
 
@@ -1092,57 +1092,60 @@ export default class Level6 extends Scene {
         let itemType = "";
         let itemStar = "";
 
-        if (item.st === 1) {
+        // Increase the star if gold upgrade is bought
+        item.st += this.goldUpgrade;
+
+        if (item.st <= 1) {
             name = "turretA";
             health = 100;
             itemType = "tomato";
             itemStar = "normal";
-        } else if (item.st === 2) {
+        } else if (item.st <= 2) {
             name = "turretAS";
             health = 100;
             itemType = "tomato";
             itemStar = "silver";
-        } else if (item.st === 3) {
+        } else if (item.st <= 3) {
             name = "turretAG";
             health = 100;
             itemType = "tomato";
             itemStar = "gold";
-        } else if (item.st === 4) {
+        } else if (item.st <= 4) {
             name = "turretB";
             health = 150;
             itemType = "watermelon";
             itemStar = "normal";
-        } else if (item.st === 5) {
+        } else if (item.st <= 5) {
             name = "turretBS";
             health = 150;
             itemType = "watermelon";
             itemStar = "silver";
-        } else if (item.st === 6) {
+        } else if (item.st <= 6) {
             name = "turretBG";
             health = 150;
             itemType = "watermelon";
             itemStar = "gold";
-        } else if (item.st === 7) {
+        } else if (item.st <= 7) {
             name = "turretC";
             health = 200;
             itemType = "peach";
             itemStar = "normal";
-        } else if (item.st === 8) {
+        } else if (item.st <= 8) {
             name = "turretCS";
             health = 200;
             itemType = "peach";
             itemStar = "silver";
-        } else if (item.st === 9) {
+        } else if (item.st <= 9) {
             name = "turretCG";
             health = 200;
             itemType = "peach";
             itemStar = "gold";
-        } else if (item.st === 10) {
+        } else if (item.st <= 10) {
             name = "turretD";
             health = 250;
             itemType = "lemon";
             itemStar = "normal";
-        } else if (item.st === 11) {
+        } else if (item.st <= 11) {
             name = "turretDS";
             health = 250;
             itemType = "lemon";
@@ -1440,7 +1443,7 @@ export default class Level6 extends Scene {
             npc.navkey = "navmesh";
 
             // Give the NPCs their AI
-            npc.addAI(EnemyBehavior, {target: this.battlers[0], range: 800});
+            npc.addAI(EnemyBehavior, {target: this.battlers[0], range: 800, level: 6});
 
             // Play the NPCs "IDLE" animation 
             npc.animation.play("IDLE");
@@ -1458,7 +1461,7 @@ export default class Level6 extends Scene {
         this.seeds = new Array<Seed>(seeds.items.length);
         for (let i = 0; i < seeds.items.length; i++) {
             let sprite = this.add.sprite("seed", "primary");
-            this.seeds[i] = new Seed(sprite);
+            this.seeds[i] = new Seed(sprite, 6);
             this.seeds[i].position.set(seeds.items[i][0], seeds.items[i][1]);
         }
 

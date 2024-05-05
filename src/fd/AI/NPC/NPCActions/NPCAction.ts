@@ -63,29 +63,23 @@ export default abstract class NPCAction extends GoapAction {
     
             if (distanceToTarget < 14) {
                 this.performAction(this._target);
-                // 타겟에 도달했다면, 새로운 타겟을 검색
                 this.findNewTarget();
             }
         } else {
-            // 경로가 완료되었거나 경로가 없는 경우, 새로운 타겟 검색
             this.findNewTarget();
         }
     }
 
     private findNewTarget(): void {
-
-        // 새로운 타겟을 찾음
         this.target = this.targetFinder.find(this.targets);
     
         if (this.target) {
-            // 새로운 타겟을 설정하고 경로를 재설정
             this.actor.setTarget(this.target);
             this.path = this.actor.getPath(this.actor.position, this.target.position);
         } else {
-            // 사용 가능한 타겟이 없을 경우, 일정 시간 후 다시 타겟 검색 시도
             setTimeout(() => {
                 this.findNewTarget();
-            }, 1000); // 1초 후 다시 시도
+            }, 1000); 
         }
     }
 
