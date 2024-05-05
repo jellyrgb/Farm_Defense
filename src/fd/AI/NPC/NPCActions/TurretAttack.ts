@@ -71,14 +71,11 @@ export default class TurretAttack extends NPCAction {
     }
 
     public performAction(target: TargetableEntity): void {
-        //this.timer.isStopped() ? console.log("Turret attack cooling down!") : console.log("Turret attack ready!");
-
         if (!target || !this.actor) {
-            console.log("Target or Actor is null");
             return;
         }
 
-        if (this.timer.isStopped() && this.actor.position.distanceTo(target.position) < 30) {
+        if (this.timer.isStopped() && this.actor.position.distanceTo(target.position) < 300) {
             this.actor.animation.play("ATTACKING", false);
 
             // Send a attacked event
@@ -116,13 +113,11 @@ export default class TurretAttack extends NPCAction {
 
     private upgradeTurret(): void {
         this.atk *= 1.1;
-        console.log("Turret upgraded: New ATK = " + this.atk + ", New Cooldown = " + this.cooldown);
     }
 
     public update(deltaT: number): void {
 
         if (!this._target || !this.actor) {
-            console.log("Target or Actor is null or undefined, trying to find new");
             this.findNewTarget();
             return;
         }

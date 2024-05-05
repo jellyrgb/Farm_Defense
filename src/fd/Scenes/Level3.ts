@@ -609,12 +609,6 @@ export default class Level3 extends Scene {
             }, 3000);
         }
 
-        // Print current player position
-        let player = this.battlers.find(b => b instanceof PlayerActor) as PlayerActor;
-        if (Input.isKeyJustPressed("y")){
-            console.log("Player Pos:", player.position.x , player.position.y);
-        }
-
         if (this.levelCleared) {
             this.emitter.fireEvent("stop_sound", {key:  "background_music"});
 
@@ -704,12 +698,10 @@ export default class Level3 extends Scene {
 
         if (!isHidden) {
             requestedLayer.setHidden(true);
-            console.log("Shop is now hidden")
         } 
         else {
             requestedLayer.setHidden(false);
             this.emitter.fireEvent("play_sound", {key: "shop_entered", loop: false, holdReference: false});
-            console.log("Shop is now not hidden")
         }
     }
 
@@ -770,7 +762,6 @@ export default class Level3 extends Scene {
      */
     public handleCheatSubmission(cheatCode: string): void {
         let player = this.battlers.find(b => b instanceof PlayerActor) as PlayerActor;
-        console.log("Cheat code handling: ", cheatCode);
         if (cheatCode == "1") {
             this.sceneManager.changeToScene(Level1);
         }
@@ -882,7 +873,6 @@ export default class Level3 extends Scene {
                 break;
             }
             case ShopEvent.OPTION_ONE_SELECTED: {
-                console.log("Option 1 selected");
 
                 if (this.money >= this.price[0]) {
                     this.emitter.fireEvent("play_sound", {key: "shop_buy", loop: false, holdReference: false});
@@ -910,7 +900,6 @@ export default class Level3 extends Scene {
                 break;
             }
             case ShopEvent.OPTION_TWO_SELECTED: {
-                console.log("Option 2 selected");
 
                 if (this.money >= this.price[1]) {
                     this.emitter.fireEvent("play_sound", {key: "shop_buy", loop: false, holdReference: false});
@@ -939,7 +928,6 @@ export default class Level3 extends Scene {
                 break;
             }
             case ShopEvent.OPTION_THREE_SELECTED: {
-                console.log("Option 3 selected");
 
                 if (this.money >= this.price[2]) {
                     this.emitter.fireEvent("play_sound", {key: "shop_buy", loop: false, holdReference: false});
@@ -968,7 +956,6 @@ export default class Level3 extends Scene {
                 break;
             }
             case ShopEvent.OPTION_FOUR_SELECTED: {
-                console.log("Option 4 selected");
 
                 if (this.money >= this.price[3]) {
                     this.emitter.fireEvent("play_sound", {key: "shop_buy", loop: false, holdReference: false});
@@ -1373,8 +1360,6 @@ export default class Level3 extends Scene {
         player.maxHealth = 10;
 
         player.inventory.onChange = ItemEvent.INVENTORY_CHANGED
-        // console.log(this.getLayer("slots").getDepth());
-        // console.log(this.getLayer("items").getDepth());
         this.inventoryHud = new InventoryHUD(this, player.inventory, "inventorySlot", {
             start: new Vec2(232, 998),
             slotLayer: "slots",
