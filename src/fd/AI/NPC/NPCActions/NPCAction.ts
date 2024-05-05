@@ -70,7 +70,7 @@ export default abstract class NPCAction extends GoapAction {
         }
     }
 
-    private findNewTarget(): void {
+    public findNewTarget(): void {
         this.target = this.targetFinder.find(this.targets);
     
         if (this.target) {

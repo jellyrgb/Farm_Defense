@@ -68,9 +68,6 @@ export default class TurretAttack extends NPCAction {
         }
 
         this.timer = new Timer(this.cooldown);
-        if (upgrade) {
-            this.atk *= 1.1;
-        }
     }
 
     public performAction(target: TargetableEntity): void {
@@ -108,19 +105,51 @@ export default class TurretAttack extends NPCAction {
 
     public handleInput(event: GameEvent): void {
         switch(event.type) {
-            default: {
+            case "TURRET_UPGRADED":
+                this.upgradeTurret();
+                break;
+            default:
                 super.handleInput(event);
                 break;
-            }
         }
     }
 
+    private upgradeTurret(): void {
+        this.atk *= 1.1;
+        console.log("Turret upgraded: New ATK = " + this.atk + ", New Cooldown = " + this.cooldown);
+    }
+
     public update(deltaT: number): void {
+
+        if (!this._target || !this.actor) {
+            console.log("Target or Actor is null or undefined, trying to find new");
+            this.findNewTarget();
+            return;
+        }
+    
+        // safely aceess to position
+        if (this.timer.isStopped() && this.actor.position.distanceTo(this._target.position) < 300) {
+            this.performAction(this._target);
+        }
+
         super.update(deltaT);
     }
 
     public onExit(): Record<string, any> {
         return super.onExit();
+    }
+
+    public findNewTarget(): void {
+        this.target = this.targetFinder.find(this.targets);
+    
+        if (this.target) {
+            this.actor.setTarget(this.target);
+            this.path = this.actor.getPath(this.actor.position, this.target.position);
+        } else {
+            setTimeout(() => {
+                this.findNewTarget();
+            }, 1000); 
+        }
     }
 
 }
