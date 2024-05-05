@@ -108,6 +108,7 @@ export default class Level1 extends Scene {
     private night: boolean;
     
     private levelCleared: boolean;
+    private firstTimeSound: boolean;
 
     private baseId: number;
     private turret: NPCActor;
@@ -149,6 +150,7 @@ export default class Level1 extends Scene {
         this.firstTurret = true;
 
         this.levelCleared = false;
+        this.firstTimeSound = true;
     }
 
     /**
@@ -626,10 +628,10 @@ export default class Level1 extends Scene {
 
         // If the level has ended
         if (this.blueEnemyCount === 0 && this.night) {
-            // Play level clear sound
-            // Reduce the sound volume
-            this.emitter.fireEvent("play_sound", {key: "level_clear", loop: false, holdReference: false});
-
+            if (this.firstTimeSound) {
+                this.playLevelClearSound();
+                this.firstTimeSound = false;
+            }
             // Output the screen message: You have survived the night!
             const nightBackground = new Rect(new Vec2(180, 180), new Vec2(220, 180));
             nightBackground.color = new Color(0, 0, 0, 0.5);
@@ -662,6 +664,10 @@ export default class Level1 extends Scene {
         if (this.enemyCountLabel) {
             this.enemyCountLabel.setText("x " + this.blueEnemyCount);
         }
+    }
+
+    protected playLevelClearSound(): void {
+        this.emitter.fireEvent("play_music", {key: "level_clear", loop: false, holdReference: false});
     }
 
     /** Prevent the player from escaping the scene */

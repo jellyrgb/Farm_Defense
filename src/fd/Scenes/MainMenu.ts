@@ -81,6 +81,11 @@ export default class MainMenu extends Scene {
         splashText.fontSize = 45;
         splashText.textColor = Color.WHITE;
 
+        // Add version number in the right bottom
+        const version = <Label>this.add.uiElement(UIElementType.LABEL, "splash", {position: new Vec2(center.x + 430, center.y + 440), text: "v1.0"});
+        version.textColor = Color.WHITE;
+        (version as Label).fontSize = 25;
+
 
         // Main menu ==========================================================================================================================================
 
