@@ -121,10 +121,10 @@ export default class Level2 extends Scene {
     public constructor(viewport: Viewport, sceneManager: SceneManager, renderingManager: RenderingManager, options: Record<string, any>) {
         super(viewport, sceneManager, renderingManager, options);
 
-        this.monsterHealth = 150;
-        this.monsterMaxHealth = 150;
+        this.monsterHealth = 20;
+        this.monsterMaxHealth = 20;
         this.monsterType = "monsterA";
-        this.monsterSpeed = 10;
+        this.monsterSpeed = 15;
         this.levelTileFile = "fd_assets/tilemaps/level2.json";
         this.levelMusicFile = "fd_assets/sounds/spring.mp3";
 
