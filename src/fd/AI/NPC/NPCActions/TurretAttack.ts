@@ -71,11 +71,7 @@ export default class TurretAttack extends NPCAction {
     }
 
     public performAction(target: TargetableEntity): void {
-        if (!target || !this.actor) {
-            return;
-        }
-
-        if (this.timer.isStopped() && this.actor.position.distanceTo(target.position) < 300) {
+        if (this.timer.isStopped() && this.actor.position.distanceTo(target.position) < 40) {
             this.actor.animation.play("ATTACKING", false);
 
             // Send a attacked event
@@ -122,8 +118,7 @@ export default class TurretAttack extends NPCAction {
             return;
         }
     
-        // safely aceess to position
-        if (this.timer.isStopped() && this.actor.position.distanceTo(this._target.position) < 300) {
+        if (this.timer.isStopped() && this.actor.position.distanceTo(this._target.position) < 40) {
             this.performAction(this._target);
         }
 
@@ -132,19 +127,6 @@ export default class TurretAttack extends NPCAction {
 
     public onExit(): Record<string, any> {
         return super.onExit();
-    }
-
-    public findNewTarget(): void {
-        this.target = this.targetFinder.find(this.targets);
-    
-        if (this.target) {
-            this.actor.setTarget(this.target);
-            this.path = this.actor.getPath(this.actor.position, this.target.position);
-        } else {
-            setTimeout(() => {
-                this.findNewTarget();
-            }, 1000); 
-        }
     }
 
 }
