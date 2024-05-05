@@ -44,6 +44,7 @@ export default class MainMenu extends Scene {
         this.load.image("storyImage", "fd_assets/sprites/1000410.png");
         this.load.image("devImage", "fd_assets/sprites/1000130.png");
         this.load.image("cheatImage", "fd_assets/sprites/1000240.png");
+        this.load.image("levelImage", "fd_assets/sprites/250200.png");
 
         this.load.image("monsterA" , "fd_assets/sprites/monsterA.png");
         this.load.image("monsterB" , "fd_assets/sprites/monsterB.png");
@@ -60,7 +61,7 @@ export default class MainMenu extends Scene {
 
     public startScene(){
         // Play the background music
-        // this.emitter.fireEvent("play_sound", {key: "bgm", loop: false, holdReference: false});
+        this.emitter.fireEvent("play_music", {key: "bgm", loop: true, holdReference: true});
 
         const center = this.viewport.getCenter();
 
@@ -165,20 +166,8 @@ export default class MainMenu extends Scene {
             const xPosition = center.x - 300 + col * 300;
             const yPosition = center.y - 150 + row * 300; 
         
-            const levelRect = new Rect(new Vec2(xPosition, yPosition), new Vec2(250, 200));
-            levelRect.color = levelColor;
-            levelRect.borderWidth = 0;
-            this.level.addNode(levelRect);
-
-            const levelRect2 = new Rect(new Vec2(xPosition, yPosition), new Vec2(240, 190));
-            levelRect2.color = Color.WHITE;
-            levelRect2.borderWidth = 0;
-            this.level.addNode(levelRect2);
-
-            const levelRect3 = new Rect(new Vec2(xPosition, yPosition), new Vec2(230, 180));
-            levelRect3.color = levelColor;
-            levelRect3.borderWidth = 0;
-            this.level.addNode(levelRect3);
+            const levelRect = this.add.sprite("levelImage", "levelSelect");
+            levelRect.position.set(xPosition, yPosition);
         
             const levelButton = this.add.uiElement(UIElementType.BUTTON, "levelSelect", {
                 position: new Vec2(xPosition, yPosition),
@@ -194,7 +183,7 @@ export default class MainMenu extends Scene {
                 levelButton.onClickEventId = "level" + (index + 1);
             } else {
                 (levelButton as Label).setTextColor(new Color(204, 204, 204)); 
-                (levelButton as Label).fontSize = 20;
+                (levelButton as Label).fontSize = 25;
                 (levelButton as Label).setText(lev + "\n(Locked)");
                 levelButton.onClick = () => {
                     const tempRect = new Rect(new Vec2(500, 500), new Vec2(800, 400));
@@ -797,6 +786,7 @@ export default class MainMenu extends Scene {
                 break;
             }
             case "level1": {
+                this.emitter.fireEvent("stop_sound", {key: "bgm"});
                 // Play the click sound
                 this.emitter.fireEvent("play_sound", {key: "click", loop: false, holdReference: false});
 
@@ -842,9 +832,8 @@ export default class MainMenu extends Scene {
         
     }
 
-    unloadScene(): void {
-        // The scene is being destroyed, so we can stop playing the song
-        // this.emitter.fireEvent(GameEventType.STOP_SOUND, {key: "bgm"});
+    public unloadScene(): void {
+        this.emitter.fireEvent("stop_sound", {key: "bgm"});
     }
     
 }

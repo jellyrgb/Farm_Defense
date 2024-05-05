@@ -264,7 +264,7 @@ export default class Level1 extends Scene {
             text: "x " + this.blueEnemyCount
         });
         this.enemyCountLabel.setTextColor(Color.WHITE);
-        this.enemyCountLabel.fontSize = 24;
+        this.enemyCountLabel.fontSize = 30;
 
         // Add money HUD
         this.moneyLayer = this.addUILayer("moneyLayer");
@@ -278,7 +278,7 @@ export default class Level1 extends Scene {
             text: ""+ this.money
         });
         (dollarText as Label).setTextColor(Color.WHITE);
-        (dollarText as Label).fontSize = 24;
+        (dollarText as Label).fontSize = 30;
 
         // Add level timer HUD
         this.timer = this.addUILayer("timer");
@@ -289,7 +289,7 @@ export default class Level1 extends Scene {
 
         const timerLabel = this.add.uiElement(UIElementType.LABEL, "timer", { position: new Vec2(180, 10), text: "1:00" });
         (timerLabel as Label).setTextColor(Color.WHITE);
-        (timerLabel as Label).fontSize = 24;
+        (timerLabel as Label).fontSize = 30;
     
         let dayDuration = 60;
         let interval = setInterval(() => {
@@ -734,13 +734,17 @@ export default class Level1 extends Scene {
         if (pearl) {
             inventory.remove(pearl.id);
             pearl.getSprite().destroy();
-            this.money += 10;
+
+            // Add 30~60 coins to the player's money
+            this.money += Math.floor(Math.random() * 30) + 30;
 
             // Update the currency label
             const dollarText = this.getLayer("moneyLayer").getItems().find(node => node instanceof Label) as Label;
             if (dollarText) {
                 dollarText.text = "" + this.money;
             }
+
+            this.emitter.fireEvent("play_sound", {key: "shop_buy", loop: false, holdReference: false});
         }
 
     }
@@ -911,6 +915,8 @@ export default class Level1 extends Scene {
                 console.log("Option 2 selected");
 
                 if (this.money >= this.price[1]) {
+                    this.emitter.fireEvent("play_sound", {key: "shop_buy", loop: false, holdReference: false});
+
                     this.emitter.fireEvent(ShopEvent.GOLD_CHANCE_UPGRADE, {});
                     this.emitter.fireEvent(ShopEvent.BOUGHT_ITEM, {price: this.price[1]});
                     this.price[1] += 10;
@@ -938,6 +944,8 @@ export default class Level1 extends Scene {
                 console.log("Option 3 selected");
 
                 if (this.money >= this.price[2]) {
+                    this.emitter.fireEvent("play_sound", {key: "shop_buy", loop: false, holdReference: false});
+
                     this.emitter.fireEvent(ShopEvent.BASE_UPGRADED, {});
                     this.emitter.fireEvent(ShopEvent.BOUGHT_ITEM, {price: this.price[2]});
                     this.price[2] += 10;
@@ -965,6 +973,8 @@ export default class Level1 extends Scene {
                 console.log("Option 4 selected");
 
                 if (this.money >= this.price[3]) {
+                    this.emitter.fireEvent("play_sound", {key: "shop_buy", loop: false, holdReference: false});
+
                     this.emitter.fireEvent(ShopEvent.GET_NEW_SEED, {});
                     this.emitter.fireEvent(ShopEvent.BOUGHT_ITEM, {price: this.price[3]});
                     this.price[3] += 10;
@@ -1340,6 +1350,7 @@ export default class Level1 extends Scene {
 
         if (battler.id === this.baseId) {
             this.emitter.fireEvent("stop_sound", {key: "background_music"});
+            this.emitter.fireEvent("play_music", {key: "game_over", loop: false, holdReference: false})
             this.sceneManager.changeToScene(GameOver);
         }
 
