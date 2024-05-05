@@ -118,6 +118,11 @@ export default class Level1 extends Scene {
     private option3priceId: number;
     private option4priceId: number;
 
+    private firstSeed: boolean;
+    private firstPearl: boolean;
+    private firstBase: boolean;
+    private firstTurret: boolean;
+
     public constructor(viewport: Viewport, sceneManager: SceneManager, renderingManager: RenderingManager, options: Record<string, any>) {
         super(viewport, sceneManager, renderingManager, options);
 
@@ -137,6 +142,11 @@ export default class Level1 extends Scene {
         this.money = 30;
         this.price = [30, 20, 10, 10];
         this.goldUpgrade = 0;
+
+        this.firstBase = true;
+        this.firstSeed = true;
+        this.firstPearl = true;
+        this.firstTurret = true;
 
         this.levelCleared = false;
     }
@@ -359,6 +369,32 @@ export default class Level1 extends Scene {
         this.receiver.subscribe("buy");
         this.receiver.subscribe("sell");
         this.receiver.subscribe("exitBuy");
+
+        // Display tutorial message
+        const tutorial = this.addUILayer("tutorial");
+        tutorial.setHidden(false);
+
+        const tutorialBackground = new Rect(center, new Vec2(300, 100));
+        tutorialBackground.color = new Color(0, 0, 0, 0.9);
+        tutorialBackground.borderColor = new Color(255, 255, 255);
+        tutorialBackground.borderWidth = 2;
+        tutorial.addNode(tutorialBackground);
+
+        const tutorialMessage = this.add.uiElement(UIElementType.LABEL, "tutorial", {position: new Vec2(175, 100), text: 
+            "Welcome to farm defense!"
+        });
+        (tutorialMessage as Label).setTextColor(Color.WHITE);
+        (tutorialMessage as Label).fontSize = 30;
+
+        const tutorialMessage2 = this.add.uiElement(UIElementType.LABEL, "tutorial", {position: new Vec2(175, 120), text: 
+            "Go find some seeds, and press E to pick up."
+        });
+        (tutorialMessage2 as Label).setTextColor(Color.WHITE);
+        (tutorialMessage2 as Label).fontSize = 30;
+
+        setTimeout(() => {
+            tutorial.setHidden(true);
+        }, 3000);
     }
 
     /** Initializes the layers in the scene */
@@ -1094,12 +1130,82 @@ export default class Level1 extends Scene {
             inventory.add(pearls.reduce(ClosestPositioned(node)));
             // Play item pick up sound
             this.emitter.fireEvent("play_sound", {key: "pearl_pick_up", loop: false, holdReference: false});
+
+            if (this.firstPearl) {
+                const tutorial = this.addUILayer("pearlTutorial");
+                tutorial.setHidden(false);
+
+                const tutorialBackground = new Rect(this.viewport.getCenter(), new Vec2(300, 100));
+                tutorialBackground.color = new Color(0, 0, 0, 0.9);
+                tutorialBackground.borderColor = new Color(255, 255, 255);
+                tutorialBackground.borderWidth = 2;
+                tutorial.addNode(tutorialBackground);
+
+                const tutorialMessage = this.add.uiElement(UIElementType.LABEL, "pearlTutorial", {position: new Vec2(175, 90), text: 
+                    "Well done!"
+                });
+                (tutorialMessage as Label).setTextColor(Color.WHITE);
+                (tutorialMessage as Label).fontSize = 30;
+
+                const tutorialMessage2 = this.add.uiElement(UIElementType.LABEL, "pearlTutorial", {position: new Vec2(175, 110), text: 
+                    "However, this is not a seed. It is a pearl."
+                });
+                (tutorialMessage2 as Label).setTextColor(Color.WHITE);
+                (tutorialMessage2 as Label).fontSize = 30;
+
+                const tutorialMessage3 = this.add.uiElement(UIElementType.LABEL, "pearlTutorial", {position: new Vec2(175, 130), text: 
+                    "You can sell it to shop expensively!"
+                });
+                (tutorialMessage3 as Label).setTextColor(Color.WHITE);
+                (tutorialMessage3 as Label).fontSize = 30;
+
+                setTimeout(() => {
+                    tutorial.setHidden(true);
+                }, 3000);
+
+                this.firstPearl = false;
+            }
         }
 
         if (items.length > 0) {
             inventory.add(items.reduce(ClosestPositioned(node)));
             // Play item pick up sound
             this.emitter.fireEvent("play_sound", {key: "pick_up", loop: false, holdReference: false});
+
+            if (this.firstSeed) {
+                const tutorial = this.addUILayer("seedTutorial");
+                tutorial.setHidden(false);
+
+                const tutorialBackground = new Rect(this.viewport.getCenter(), new Vec2(300, 100));
+                tutorialBackground.color = new Color(0, 0, 0, 0.9);
+                tutorialBackground.borderColor = new Color(255, 255, 255);
+                tutorialBackground.borderWidth = 2;
+                tutorial.addNode(tutorialBackground);
+
+                const tutorialMessage = this.add.uiElement(UIElementType.LABEL, "seedTutorial", {position: new Vec2(175, 90), text: 
+                    "Great! This is a seed."
+                });
+                (tutorialMessage as Label).setTextColor(Color.WHITE);
+                (tutorialMessage as Label).fontSize = 30;
+
+                const tutorialMessage2 = this.add.uiElement(UIElementType.LABEL, "seedTutorial", {position: new Vec2(175, 110), text: 
+                    "You can plant it in farmland, in front of the base."
+                });
+                (tutorialMessage2 as Label).setTextColor(Color.WHITE);
+                (tutorialMessage2 as Label).fontSize = 30;
+
+                const tutorialMessage3 = this.add.uiElement(UIElementType.LABEL, "seedTutorial", {position: new Vec2(175, 130), text: 
+                    "You can buy more seeds from the shop."
+                });
+                (tutorialMessage3 as Label).setTextColor(Color.WHITE);
+                (tutorialMessage3 as Label).fontSize = 30;
+
+                setTimeout(() => {
+                    tutorial.setHidden(true);
+                }, 3000);
+
+                this.firstSeed = false;
+            }
         }
     }
 
@@ -1180,6 +1286,41 @@ export default class Level1 extends Scene {
             health = 250;
             itemType = "lemon";
             itemStar = "gold";
+        }
+    
+        if (this.firstTurret) {
+            const tutorial = this.addUILayer("turretTutorial");
+            tutorial.setHidden(false);
+
+            const tutorialMessage = this.add.uiElement(UIElementType.LABEL, "turretTutorial", {position: new Vec2(175, 70), text: 
+                "Great! Your seed will now grow up into a soldier."
+            });
+            (tutorialMessage as Label).setTextColor(Color.WHITE);
+            (tutorialMessage as Label).fontSize = 30;
+
+            const tutorialMessage2 = this.add.uiElement(UIElementType.LABEL, "turretTutorial", {position: new Vec2(175, 90), text: 
+                "Please wait until the seed fully grows up,"
+            });
+            (tutorialMessage2 as Label).setTextColor(Color.WHITE);
+            (tutorialMessage2 as Label).fontSize = 30;
+
+            const tutorialMessage3 = this.add.uiElement(UIElementType.LABEL, "turretTutorial", {position: new Vec2(175, 110), text: 
+                "before planting another one."
+            });
+            (tutorialMessage3 as Label).setTextColor(Color.WHITE);
+            (tutorialMessage3 as Label).fontSize = 30;
+
+            const tutorialMessage4 = this.add.uiElement(UIElementType.LABEL, "turretTutorial", {position: new Vec2(175, 130), text: 
+                "Let the soldiers fight the monster for you!"
+            });
+            (tutorialMessage4 as Label).setTextColor(Color.WHITE);
+            (tutorialMessage4 as Label).fontSize = 30;
+
+            setTimeout(() => {
+                tutorial.setHidden(true);
+            }, 5000);
+
+            this.firstTurret = false;
         }
         
         let turret = this.add.animatedSprite(NPCActor, name, "primary");
