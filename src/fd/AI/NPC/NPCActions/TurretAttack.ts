@@ -78,7 +78,7 @@ export default class TurretAttack extends NPCAction {
             return;
         }
 
-        if (this.timer.isStopped() && this.actor.position.distanceTo(target.position) < 300) {
+        if (this.timer.isStopped() && this.actor.position.distanceTo(target.position) < 30) {
             this.actor.animation.play("ATTACKING", false);
 
             // Send a attacked event

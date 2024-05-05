@@ -106,6 +106,8 @@ export default class Level1 extends Scene {
     /** Level time indicators */
     private timer : Layer;
     private night: boolean;
+    
+    private levelCleared: boolean;
 
     private baseId: number;
     private turret: NPCActor;
@@ -135,6 +137,8 @@ export default class Level1 extends Scene {
         this.money = 30;
         this.price = [30, 20, 10, 10];
         this.goldUpgrade = 0;
+
+        this.levelCleared = false;
     }
 
     /**
@@ -172,12 +176,12 @@ export default class Level1 extends Scene {
         this.load.tilemap("level", this.levelTileFile);
 
         // Load the enemy locations
-        this.load.object("enemy_location", "fd_assets/data/enemies/enemy_location.json");
+        this.load.object("enemy_location", "fd_assets/data/enemies/level1_monster.json");
 
         // Load the seed locations
-        this.load.object("seeds", "fd_assets/data/items/seeds.json");
+        this.load.object("seeds", "fd_assets/data/items/level1_seed.json");
         this.load.object("shop", "fd_assets/data/items/shop.json");
-        this.load.object("pearls", "fd_assets/data/items/pearls.json");
+        this.load.object("pearls", "fd_assets/data/items/level1_pearl.json");
 
         // Load the image sprites
         this.load.image("seed", "fd_assets/sprites/seed.png");
@@ -596,10 +600,7 @@ export default class Level1 extends Scene {
 
             // Proceed to the next level after 3 seconds
             setTimeout(() => {
-                MainMenu.maxLevelUnlocked = Math.max(MainMenu.maxLevelUnlocked, 2);
-                this.viewport.setZoomLevel(1);
-                this.sceneManager.changeToScene(MainMenu);
-                // this.sceneManager.changeToScene(Level2);
+                this.levelCleared = true;
             }, 3000);
         }
 
@@ -607,6 +608,14 @@ export default class Level1 extends Scene {
         let player = this.battlers.find(b => b instanceof PlayerActor) as PlayerActor;
         if (Input.isKeyJustPressed("y")){
             console.log("Player Pos:", player.position.x , player.position.y);
+        }
+
+        if (this.levelCleared) {
+            this.emitter.fireEvent("stop_sound", {key:  "background_music"});
+
+            MainMenu.maxLevelUnlocked = Math.max(MainMenu.maxLevelUnlocked, 2);
+            this.viewport.setZoomLevel(1);
+            this.sceneManager.changeToScene(Level2);
         }
     }
 
