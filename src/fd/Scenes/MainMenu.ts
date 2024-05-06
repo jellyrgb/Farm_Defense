@@ -82,7 +82,7 @@ export default class MainMenu extends Scene {
         splashText.textColor = Color.WHITE;
 
         // Add version number in the right bottom
-        const version = <Label>this.add.uiElement(UIElementType.LABEL, "splash", {position: new Vec2(center.x + 430, center.y + 440), text: "v1.1"});
+        const version = <Label>this.add.uiElement(UIElementType.LABEL, "splash", {position: new Vec2(center.x + 430, center.y + 440), text: "v1.2"});
         version.textColor = Color.WHITE;
         (version as Label).fontSize = 25;
 
@@ -475,7 +475,7 @@ export default class MainMenu extends Scene {
         monsterBLabel3.textColor = Color.BLACK;
         monsterBLabel3.fontSize = 22;
 
-        const Btext4 = "Health: 36 (Lvl 1), 69 (Lvl 4)";
+        const Btext4 = "Health: 18 (Lvl 1), 70 (Lvl 4)";
         const monsterBLabel4 = <Label>this.add.uiElement(UIElementType.LABEL, "monster", {position: new Vec2(center.x + 65, center.y - 160), text: Btext4});
         monsterBLabel4.textColor = Color.BLACK;
         monsterBLabel4.fontSize = 22;
@@ -507,7 +507,7 @@ export default class MainMenu extends Scene {
         monsterALabel3.textColor = Color.BLACK;
         monsterALabel3.fontSize = 22;
 
-        const Atext4 = "Health: 42 (Lvl 2), 500 (Lvl 5)";
+        const Atext4 = "Health: 20 (Lvl 2), 800 (Lvl 5)";
         const monsterALabel4 = <Label>this.add.uiElement(UIElementType.LABEL, "monster", {position: new Vec2(center.x + 65, center.y + 60), text: Atext4});
         monsterALabel4.textColor = Color.BLACK;
         monsterALabel4.fontSize = 22;
@@ -539,7 +539,7 @@ export default class MainMenu extends Scene {
         monsterCLabel3.textColor = Color.BLACK;
         monsterCLabel3.fontSize = 22;
 
-        const Ctext4 = "Health: 54 (Lvl 3), 500 (Lvl 6)";
+        const Ctext4 = "Health: 54 (Lvl 3), 2000 (Lvl 6)";
         const monsterCLabel4 = <Label>this.add.uiElement(UIElementType.LABEL, "monster", {position: new Vec2(center.x + 65, center.y + 280), text: Ctext4});
         monsterCLabel4.textColor = Color.BLACK;
         monsterCLabel4.fontSize = 22;

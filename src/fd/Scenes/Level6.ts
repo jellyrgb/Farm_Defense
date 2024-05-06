@@ -122,8 +122,8 @@ export default class Level6 extends Scene {
     public constructor(viewport: Viewport, sceneManager: SceneManager, renderingManager: RenderingManager, options: Record<string, any>) {
         super(viewport, sceneManager, renderingManager, options);
 
-        this.monsterHealth = 150;
-        this.monsterMaxHealth = 150;
+        this.monsterHealth = 2000;
+        this.monsterMaxHealth = 2000;
         this.monsterType = "monsterC";
         this.monsterSpeed = 30;
         this.levelTileFile = "fd_assets/tilemaps/level6.json";
