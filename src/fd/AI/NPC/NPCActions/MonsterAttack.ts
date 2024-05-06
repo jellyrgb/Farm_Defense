@@ -32,10 +32,9 @@ export default class MonsterAttack extends NPCAction {
             this.damage = 50;
         } else if (level == 5) {
             this.damage = 160;
-            this.cooldown = 4000;
         } else if (level == 6) {
             this.damage = 210;
-            this.cooldown = 4000;
+            this.cooldown = 1500;
         }
 
         this.timer = new Timer(this.cooldown);
