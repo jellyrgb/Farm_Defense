@@ -1,0 +1,12 @@
+1~4: idling
+5~7: walk let
+8~10: walk right
+11~12: walk down
+13~14: walk up
+15~16: eating
+17~18: damaging
+19: dead
+
+columns: 4
+rows: 5
+128 x 160 px, 19 frames

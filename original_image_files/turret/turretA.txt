@@ -1,0 +1,9 @@
+1~4: grow up
+5~7: idle
+8~9: shooting
+10~11: damaged
+12~14: dying
+15: dead
+
+columns: 4
+rows: 4

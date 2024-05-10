@@ -1,0 +1,11 @@
+1~4 idling
+5~8: walk left
+9~12: walk right
+13~16: walk down
+17~20: walk up
+21~22: pick up
+23~26: use
+
+columns: 5
+rows: 6
+160 x 192 px, 26 frames

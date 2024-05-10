@@ -1,0 +1,10 @@
+1~4: walk left, walk up
+5~8: walk right, walk down
+9~10: attacking (eating)
+11~12: tacking damage
+13~15: dying
+16: dead
+
+columns: 4
+rows: 4
+128 x 128 px, 16 frames
